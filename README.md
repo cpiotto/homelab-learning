@@ -21,12 +21,14 @@ This repository documents my practical learning journey with Linux, networking, 
 
 ## Current Architecture
 
-Lenovo ThinkCentre V520s
 
+```text
+Lenovo ThinkCentre V520s
 └── Proxmox VE
     └── LXC 100 - docker01
         └── Debian 13
             └── Docker
+```
 
 ## Learning Goals
 
