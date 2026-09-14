@@ -19,7 +19,8 @@ This repository documents my practical learning journey with Linux, networking, 
 - Secondary virtualization and infrastructure lab node
 - Hostname: `pve3090`
 - Static management address: `192.168.1.165:8006`
-- NVMe system storage connected through a Realtek RTL9210 bridge
+- Samsung SSD 840 Series SATA system disk
+- NVMe/Kioxia storage detection retained as a future troubleshooting task
 
 ## Technologies
 
@@ -37,6 +38,7 @@ This repository documents my practical learning journey with Linux, networking, 
 - Linux bridges
 - EXT4 / LVM
 - SMART / NVMe diagnostics
+- SATA / NVMe storage troubleshooting
 - Monitoring
 - Infrastructure troubleshooting
 
@@ -57,6 +59,7 @@ Home Network
 │
 └── PVE-02 - Dell OptiPlex 3090 Micro
     └── Proxmox VE - 192.168.1.165
+        ├── Samsung SSD 840 Series SATA system disk
         └── Secondary virtualization / infrastructure node
 ```
 
@@ -93,7 +96,7 @@ This is the primary node and currently hosts `docker01`, the Debian LXC containe
 
 The second Proxmox node was added to expand the lab and provide another system for virtualization, networking and infrastructure troubleshooting.
 
-During setup, the node experienced a storage/filesystem incident where EXT4 remounted the root filesystem read-only. The troubleshooting process included:
+During the initial setup, the node experienced a storage/filesystem incident where EXT4 remounted the root filesystem read-only. The troubleshooting process included:
 
 - ICMP connectivity testing
 - TCP port testing with `Test-NetConnection`
@@ -106,9 +109,12 @@ During setup, the node experienced a storage/filesystem incident where EXT4 remo
 - NVMe bridge/cable troubleshooting
 - Static Proxmox network verification
 
-Full incident notes are available here:
+A later storage session tested a Samsung SATA SSD and a Kioxia NVMe device. Linux successfully detected and booted Proxmox from the Samsung SSD 840 Series SATA drive, while the Kioxia NVMe device was not detected. BIOS and boot settings were investigated, including the observed `RAID On` storage mode. The working SATA configuration was kept as the known-good system disk rather than risking the stable installation with unnecessary controller-mode changes.
+
+Full troubleshooting notes are available here:
 
 - [PVE-02 / OptiPlex 3090 troubleshooting](docs/pve3090-troubleshooting.md)
+- [PVE-02 storage troubleshooting - 14 September 2026](docs/pve3090-storage-troubleshooting-2026-09-14.md)
 
 ## Docker Services
 
@@ -226,6 +232,7 @@ usermod
 sudo
 systemctl status
 lsblk -f
+lsblk -o NAME,SIZE,MODEL,TRAN
 findmnt
 smartctl
 dmesg
@@ -313,10 +320,16 @@ The goal of this homelab is to develop practical skills in:
 - [x] Checked NVMe SMART health and Linux kernel storage logs
 - [x] Recovered PVE-02 web management access
 - [x] Documented the PVE-02 troubleshooting process
+- [x] Tested Samsung SATA storage as the PVE-02 system disk
+- [x] Used `lsblk` to verify the physical disk and Proxmox LVM layout
+- [x] Investigated an undetected Kioxia NVMe device
+- [x] Compared Linux storage detection with Dell BIOS/boot behaviour
+- [x] Returned PVE-02 to stable headless operation on SATA storage
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Deploy workloads on PVE-02
 - [ ] Learn Docker networking in more depth
 - [ ] Configure backups
 - [ ] Improve homelab security
-- [ ] Monitor PVE-02 for recurring storage / bridge errors
+- [ ] Revisit NVMe support on PVE-02 using a safe test path
+- [ ] Monitor PVE-02 storage health
