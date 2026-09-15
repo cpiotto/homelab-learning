@@ -9,17 +9,22 @@ This repository documents my practical learning journey with Linux, networking, 
 - Intel Core i5-7400
 - 16 GB RAM
 - 256 GB SSD
-- Proxmox VE
+- Proxmox VE 9.2.20
+- Running kernel: `7.0.14-17-pve`
 - Primary homelab virtualization node
 - Management address: `192.168.1.164:8006`
 
 ### PVE-02 - Dell OptiPlex 3090 Micro
 
-- Proxmox VE
+- Intel Core i5-10500T
+- 6 cores / 12 threads
+- 16 GB RAM
+- Proxmox VE 9.2.20
+- Running kernel: `7.0.14-17-pve`
 - Secondary virtualization and infrastructure lab node
 - Hostname: `pve3090`
 - Static management address: `192.168.1.165:8006`
-- Samsung SSD 840 Series SATA system disk
+- Samsung SSD 840 Series 120 GB SATA system disk
 - NVMe/Kioxia storage detection retained as a future troubleshooting task
 
 ## Technologies
@@ -36,9 +41,12 @@ This repository documents my practical learning journey with Linux, networking, 
 - Networking
 - DHCP and static addressing
 - Linux bridges
+- Routing and default gateways
+- DNS troubleshooting
 - EXT4 / LVM
 - SMART / NVMe diagnostics
 - SATA / NVMe storage troubleshooting
+- APT repository management
 - Monitoring
 - Infrastructure troubleshooting
 
@@ -47,7 +55,7 @@ This repository documents my practical learning journey with Linux, networking, 
 ```text
 Home Network
 ├── PVE-01 - Lenovo ThinkCentre V520s
-│   └── Proxmox VE - 192.168.1.164
+│   └── Proxmox VE 9.2.20 - 192.168.1.164
 │       └── LXC 100 - docker01
 │           └── Debian 13 - 192.168.1.101
 │               ├── SSH Server
@@ -58,7 +66,7 @@ Home Network
 │                       └── uptime-kuma-data volume
 │
 └── PVE-02 - Dell OptiPlex 3090 Micro
-    └── Proxmox VE - 192.168.1.165
+    └── Proxmox VE 9.2.20 - 192.168.1.165
         ├── Samsung SSD 840 Series SATA system disk
         └── Secondary virtualization / infrastructure node
 ```
@@ -78,19 +86,25 @@ Home Network
 
 The `docker01` server uses DHCP with a router reservation so it keeps the address `192.168.1.101`.
 
+Both Proxmox hosts use the LAN gateway and DNS resolver at `192.168.1.254`.
+
 The OptiPlex Proxmox node uses a static address configured directly on the Proxmox bridge `vmbr0`:
 
 ```text
 address 192.168.1.165/24
 gateway 192.168.1.254
-bridge-ports eno2
+bridge-ports nic0
 ```
+
+The physical interface `nic0` is attached to `vmbr0`. The bridge carries the Proxmox management address and will also provide LAN access for future VMs and LXC containers.
 
 ## Proxmox Nodes
 
 ### PVE-01 - Lenovo V520s
 
 This is the primary node and currently hosts `docker01`, the Debian LXC container used for Docker services and Linux administration practice.
+
+The node uses the Proxmox `pve-no-subscription` repository and was updated to Proxmox VE 9.2.20 with kernel `7.0.14-17-pve` on 15 September 2026.
 
 ### PVE-02 - Dell OptiPlex 3090
 
@@ -111,10 +125,15 @@ During the initial setup, the node experienced a storage/filesystem incident whe
 
 A later storage session tested a Samsung SATA SSD and a Kioxia NVMe device. Linux successfully detected and booted Proxmox from the Samsung SSD 840 Series SATA drive, while the Kioxia NVMe device was not detected. BIOS and boot settings were investigated, including the observed `RAID On` storage mode. The working SATA configuration was kept as the known-good system disk rather than risking the stable installation with unnecessary controller-mode changes.
 
-Full troubleshooting notes are available here:
+On 15 September 2026, the node was used for a practical networking and maintenance session. The LAN connection between PVE-01 and PVE-02 was verified with ICMP and SSH. A wrong default gateway (`192.168.1.1`) and DNS resolver (`192.168.1.1`) were identified on PVE-02 by comparing its configuration with the working Lenovo node. Both were corrected to `192.168.1.254`. Internet access, DNS resolution and APT were then validated independently.
+
+The Enterprise PVE and unused Ceph Enterprise repositories were disabled on PVE-02, the `pve-no-subscription` repository was configured, and a simulated full upgrade was reviewed before applying updates. The node finished the session on Proxmox VE 9.2.20 with kernel `7.0.14-17-pve`, matching PVE-01.
+
+Full troubleshooting and maintenance notes are available here:
 
 - [PVE-02 / OptiPlex 3090 troubleshooting](docs/pve3090-troubleshooting.md)
 - [PVE-02 storage troubleshooting - 14 September 2026](docs/pve3090-storage-troubleshooting-2026-09-14.md)
+- [Network and Proxmox maintenance - 15 September 2026](docs/network-maintenance-2026-09-15.md)
 
 ## Docker Services
 
@@ -176,6 +195,12 @@ Expected result:
 root
 ```
 
+The Proxmox nodes can also be administered over SSH for infrastructure maintenance. During the 15 September networking session, PVE-01 was used to connect directly to PVE-02:
+
+```bash
+ssh root@192.168.1.165
+```
+
 ## SSH Key Authentication
 
 An Ed25519 SSH key pair was created on Windows.
@@ -222,11 +247,15 @@ ssh cesar@192.168.1.101
 
 ```bash
 apt update
-apt full-upgrade -y
+apt -s full-upgrade
+apt full-upgrade
 apt install
 hostname -I
 whoami
 hostname
+uptime
+free -h
+lscpu
 groups
 usermod
 sudo
@@ -236,8 +265,19 @@ lsblk -o NAME,SIZE,MODEL,TRAN
 findmnt
 smartctl
 dmesg
+pvesm status
+pveversion
+uname -r
+cat /etc/pve/storage.cfg
 cat /etc/network/interfaces
+cat /etc/resolv.conf
+ip -br addr
+ip route
+ip neigh
+bridge link
+ping -c 4
 poweroff
+reboot
 ```
 
 ### Docker
@@ -325,9 +365,20 @@ The goal of this homelab is to develop practical skills in:
 - [x] Investigated an undetected Kioxia NVMe device
 - [x] Compared Linux storage detection with Dell BIOS/boot behaviour
 - [x] Returned PVE-02 to stable headless operation on SATA storage
+- [x] Verified ICMP connectivity in both directions between PVE-01 and PVE-02
+- [x] Administered PVE-02 remotely from PVE-01 using SSH
+- [x] Inspected `vmbr0`, `nic0`, routing and neighbour tables
+- [x] Diagnosed and corrected the PVE-02 default gateway
+- [x] Diagnosed and corrected PVE-02 DNS resolution
+- [x] Configured the Proxmox no-subscription repository on PVE-02
+- [x] Disabled unused Enterprise / Ceph Enterprise repositories on PVE-02
+- [x] Practised safe upgrade simulation with `apt -s full-upgrade`
+- [x] Updated PVE-01 and PVE-02 to Proxmox VE 9.2.20
+- [x] Updated PVE-01 and PVE-02 to kernel `7.0.14-17-pve`
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Deploy workloads on PVE-02
+- [ ] Create the first VM on PVE-02 and connect it through `vmbr0`
 - [ ] Learn Docker networking in more depth
 - [ ] Configure backups
 - [ ] Improve homelab security
