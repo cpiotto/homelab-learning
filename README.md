@@ -31,15 +31,19 @@ This repository documents my practical learning journey with Linux, networking, 
 
 - Proxmox VE
 - Debian Linux
+- Ubuntu Server
+- Virtual machines
 - LXC Containers
 - Docker
 - Docker Compose
 - Portainer
 - Uptime Kuma
 - SSH / OpenSSH
+- QEMU Guest Agent
 - Linux administration
 - Networking
-- DHCP and static addressing
+- DHCP and DHCP reservations
+- Static addressing
 - Linux bridges
 - Routing and default gateways
 - DNS troubleshooting
@@ -68,7 +72,12 @@ Home Network
 └── PVE-02 - Dell OptiPlex 3090 Micro
     └── Proxmox VE 9.2.20 - 192.168.1.165
         ├── Samsung SSD 840 Series SATA system disk
-        └── Secondary virtualization / infrastructure node
+        └── VM 100 - ubuntu-server
+            └── Ubuntu Server 24.04.5 LTS - 192.168.1.106
+                ├── 2 vCPU / 2 GB RAM / 20 GiB disk
+                ├── SSH Server
+                ├── QEMU Guest Agent
+                └── DHCP reservation + Start at boot
 ```
 
 ## Network
@@ -81,10 +90,14 @@ Home Network
 | PVE-02 - OptiPlex 3090 | `192.168.1.165:8006` | Secondary Proxmox management |
 | docker01 | `192.168.1.101` | Debian LXC Docker host |
 | SSH - docker01 | `192.168.1.101:22` | Remote Linux administration |
+| ubuntu-server | `192.168.1.106` | Ubuntu Server VM on PVE-02 |
+| SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
 | Portainer | `192.168.1.101:9443` | Docker web management |
 | Uptime Kuma | `192.168.1.101:3001` | Service monitoring |
 
 The `docker01` server uses DHCP with a router reservation so it keeps the address `192.168.1.101`.
+
+The `ubuntu-server` VM also uses DHCP with a router reservation. The router maps MAC address `BC:24:11:47:01:A7` to `192.168.1.106`, so the guest keeps a predictable address while Netplan remains DHCP-based.
 
 Both Proxmox hosts use the LAN gateway and DNS resolver at `192.168.1.254`.
 
@@ -96,7 +109,7 @@ gateway 192.168.1.254
 bridge-ports nic0
 ```
 
-The physical interface `nic0` is attached to `vmbr0`. The bridge carries the Proxmox management address and will also provide LAN access for future VMs and LXC containers.
+The physical interface `nic0` is attached to `vmbr0`. The bridge carries the Proxmox management address and also provides LAN access to VM 100 through its VirtIO network adapter.
 
 ## Proxmox Nodes
 
@@ -129,11 +142,14 @@ On 15 September 2026, the node was used for a practical networking and maintenan
 
 The Enterprise PVE and unused Ceph Enterprise repositories were disabled on PVE-02, the `pve-no-subscription` repository was configured, and a simulated full upgrade was reviewed before applying updates. The node finished the session on Proxmox VE 9.2.20 with kernel `7.0.14-17-pve`, matching PVE-01.
 
+Later the same day, PVE-02 received its first full virtual machine: `VM 100 - ubuntu-server`. Ubuntu Server 24.04.5 LTS was installed with 2 vCPU, 2 GB RAM and a 20 GiB virtual disk on `local-lvm`. Its VirtIO network adapter is attached to `vmbr0`, giving the guest direct access to the home LAN at reserved address `192.168.1.106`. OpenSSH and the QEMU Guest Agent were enabled and tested, the VM was configured to start automatically with the host, and a reboot test confirmed that networking, SSH and guest-agent integration return correctly.
+
 Full troubleshooting and maintenance notes are available here:
 
 - [PVE-02 / OptiPlex 3090 troubleshooting](docs/pve3090-troubleshooting.md)
 - [PVE-02 storage troubleshooting - 14 September 2026](docs/pve3090-storage-troubleshooting-2026-09-14.md)
 - [Network and Proxmox maintenance - 15 September 2026](docs/network-maintenance-2026-09-15.md)
+- [First Ubuntu Server VM on PVE-02 - 15 September 2026](docs/first-vm-ubuntu-server-2026-09-15.md)
 
 ## Docker Services
 
@@ -173,6 +189,12 @@ Basic connection:
 
 ```powershell
 ssh cesar@192.168.1.101
+```
+
+The Ubuntu VM on PVE-02 can be administered from other LAN systems, including PVE-01:
+
+```bash
+ssh cesar@192.168.1.106
 ```
 
 A normal Linux user was created instead of using `root` for daily administration.
@@ -260,6 +282,7 @@ groups
 usermod
 sudo
 systemctl status
+systemctl is-active
 lsblk -f
 lsblk -o NAME,SIZE,MODEL,TRAN
 findmnt
@@ -268,6 +291,12 @@ dmesg
 pvesm status
 pveversion
 uname -r
+qm status
+qm config
+qm reset
+qm reboot
+qm agent
+qm guest cmd
 cat /etc/pve/storage.cfg
 cat /etc/network/interfaces
 cat /etc/resolv.conf
@@ -297,6 +326,7 @@ docker restart
 
 ```text
 ssh
+ssh -vvv
 ssh-keygen
 ssh-add
 ping
@@ -375,10 +405,16 @@ The goal of this homelab is to develop practical skills in:
 - [x] Practised safe upgrade simulation with `apt -s full-upgrade`
 - [x] Updated PVE-01 and PVE-02 to Proxmox VE 9.2.20
 - [x] Updated PVE-01 and PVE-02 to kernel `7.0.14-17-pve`
+- [x] Deployed the first workload on PVE-02
+- [x] Created VM 100 `ubuntu-server` on PVE-02 and connected it through `vmbr0`
+- [x] Installed Ubuntu Server 24.04.5 LTS on VM 100
+- [x] Configured and tested SSH on the Ubuntu VM
+- [x] Installed and tested QEMU Guest Agent
+- [x] Reserved `192.168.1.106` for the Ubuntu VM using DHCP reservation
+- [x] Configured VM 100 to start automatically with PVE-02
+- [x] Reboot-tested VM 100 and verified IP, SSH and QEMU Guest Agent recovery
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
-- [ ] Deploy workloads on PVE-02
-- [ ] Create the first VM on PVE-02 and connect it through `vmbr0`
 - [ ] Learn Docker networking in more depth
 - [ ] Configure backups
 - [ ] Improve homelab security
