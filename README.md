@@ -88,12 +88,8 @@ Home Network
 | --- | --- | --- |
 | PVE-01 - Lenovo V520s | `192.168.1.164:8006` | Primary Proxmox management |
 | PVE-02 - OptiPlex 3090 | `192.168.1.165:8006` | Secondary Proxmox management |
-| docker01 | `192.168.1.101` | Debian LXC Docker host |
-| SSH - docker01 | `192.168.1.101:22` | Remote Linux administration |
 | ubuntu-server | `192.168.1.106` | Ubuntu Server VM on PVE-02 |
 | SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
-| Portainer | `192.168.1.101:9443` | Docker web management |
-| Uptime Kuma | `192.168.1.101:3001` | Service monitoring |
 
 The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
 
@@ -158,6 +154,8 @@ Full troubleshooting and maintenance notes are available here:
 
 ## Docker Services
 
+Portainer and Uptime Kuma were previously hosted in the old `docker01` LXC. That container was removed during the 23 September 2026 storage cleanup, and these services are currently awaiting redeployment on the rebuilt environment.
+
 ### Portainer
 
 Portainer provides a graphical interface for managing Docker.
@@ -188,13 +186,7 @@ Current monitors include:
 
 ## Remote Administration
 
-The Debian LXC `docker01` can be administered remotely from Windows using SSH.
-
-Basic connection:
-
-```powershell
-ssh cesar@192.168.1.101
-```
+The previous Debian LXC `docker01` was administered remotely from Windows using SSH. It is currently offline after the 23 September 2026 cleanup and will be configured again when rebuilt.
 
 The Ubuntu VM on PVE-02 can be administered from other LAN systems, including PVE-01:
 
