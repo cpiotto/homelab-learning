@@ -8,10 +8,12 @@ This repository documents my practical learning journey with Linux, networking, 
 
 - Intel Core i5-7400
 - 16 GB RAM
-- 256 GB SSD
 - Proxmox VE 9.2.20
 - Running kernel: `7.0.14-17-pve`
-- Primary homelab virtualization node
+- Samsung SSD 830 256 GB SATA system disk
+- Samsung PM991a 256 GB NVMe as `nvme-storage` for VMs/LXC
+- Samsung MZ7LN256HCHP 256 GB SATA as `backup-storage`
+- Virtualization and storage lab node
 - Management address: `192.168.1.164:8006`
 
 ### PVE-02 - Dell OptiPlex 3090 Micro
@@ -115,7 +117,11 @@ The physical interface `nic0` is attached to `vmbr0`. The bridge carries the Pro
 
 ### PVE-01 - Lenovo V520s
 
-This is the primary node and currently hosts `docker01`, the Debian LXC container used for Docker services and Linux administration practice.
+On 23 September 2026 the Lenovo storage layout was reorganised. The existing Samsung SSD 830 SATA disk remains the Proxmox system disk. A Samsung PM991a 256 GB NVMe was repurposed as `nvme-storage` for new VMs and LXC containers, and a Samsung MZ7LN256HCHP 256 GB SATA SSD was configured as EXT4 `backup-storage` mounted at `/mnt/pve-backup`.
+
+The backup SSD passed its extended SMART self-test, but its approximately 66,065 power-on hours were documented as a limitation, so it is treated as secondary lab storage rather than the sole copy of important data.
+
+The old LXC 100 / `docker01` workload was stopped and its orphaned `local-lvm:vm-100-disk-0` volume was removed. A clean rebuild of `docker01` is planned.
 
 The node uses the Proxmox `pve-no-subscription` repository and was updated to Proxmox VE 9.2.20 with kernel `7.0.14-17-pve` on 15 September 2026.
 
@@ -150,6 +156,7 @@ Full troubleshooting and maintenance notes are available here:
 - [PVE-02 storage troubleshooting - 14 September 2026](docs/pve3090-storage-troubleshooting-2026-09-14.md)
 - [Network and Proxmox maintenance - 15 September 2026](docs/network-maintenance-2026-09-15.md)
 - [First Ubuntu Server VM on PVE-02 - 15 September 2026](docs/first-vm-ubuntu-server-2026-09-15.md)
+- [Lenovo V520s storage upgrade and cleanup - 23 September 2026](docs/lenovo-storage-upgrade-2026-09-23.md)
 
 ## Docker Services
 
