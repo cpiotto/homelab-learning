@@ -62,14 +62,12 @@ This repository documents my practical learning journey with Linux, networking, 
 Home Network
 ├── PVE-01 - Lenovo ThinkCentre V520s
 │   └── Proxmox VE 9.2.20 - 192.168.1.164
-│       └── LXC 100 - docker01
-│           └── Debian 13 - 192.168.1.101
-│               ├── SSH Server
-│               └── Docker
-│                   ├── Portainer
-│                   │   └── portainer_data volume
-│                   └── Uptime Kuma
-│                       └── uptime-kuma-data volume
+│       ├── Samsung SSD 830 256 GB SATA - Proxmox system disk
+│       ├── nvme-storage - Samsung PM991a 256 GB NVMe
+│       │   └── LVM-thin storage for new VMs/LXC
+│       ├── backup-storage - Samsung MZ7LN256HCHP 256 GB SATA
+│       │   └── EXT4 mounted at /mnt/pve-backup
+│       └── docker01 - old LXC removed; clean rebuild planned
 │
 └── PVE-02 - Dell OptiPlex 3090 Micro
     └── Proxmox VE 9.2.20 - 192.168.1.165
@@ -97,7 +95,7 @@ Home Network
 | Portainer | `192.168.1.101:9443` | Docker web management |
 | Uptime Kuma | `192.168.1.101:3001` | Service monitoring |
 
-The `docker01` server uses DHCP with a router reservation so it keeps the address `192.168.1.101`.
+The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
 
 The `ubuntu-server` VM also uses DHCP with a router reservation. The router maps MAC address `BC:24:11:47:01:A7` to `192.168.1.106`, so the guest keeps a predictable address while Netplan remains DHCP-based.
 
