@@ -40,6 +40,16 @@ This repository documents my practical learning journey with Linux, networking, 
 - Static management address: `192.168.1.167:8006`
 - Fresh Proxmox node reserved for future workloads
 
+### Network switch
+
+- TP-Link 8-port Ethernet switch
+- Used as the central wired connection point for the homelab nodes
+- Port 1: uplink to the wall/network connection
+- Port 2: Dell OptiPlex 3090 (`pve3090`)
+- Port 3: Lenovo ThinkCentre V520s (`pve`)
+- Port 4: Dell OptiPlex 3080
+- Remaining ports reserved for additional homelab devices
+
 ## Technologies
 
 - Proxmox VE
@@ -104,6 +114,20 @@ Home Network
 ## Network
 
 > The addresses below are private RFC1918 LAN addresses. They are not publicly routable Internet addresses.
+
+### Physical topology
+
+A TP-Link 8-port Ethernet switch was added as the central wired connection point for the homelab. This makes the physical layout easier to expand and keeps the Proxmox nodes on the same LAN segment.
+
+| Switch port | Connection |
+| --- | --- |
+| 1 | Uplink to wall / home network |
+| 2 | Dell OptiPlex 3090 - `pve3090` |
+| 3 | Lenovo ThinkCentre V520s - `pve` |
+| 4 | Dell OptiPlex 3080 |
+| 5-8 | Available for future homelab devices |
+
+The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 features are not configured on the switch itself.
 
 | Service / Node | Address / Port | Purpose |
 | --- | --- | --- |
@@ -413,6 +437,7 @@ The goal of this homelab is to develop practical skills in:
 - [x] Configured SSH public-key authentication
 - [x] Configured Windows ssh-agent
 - [x] Added a second Proxmox node using a Dell OptiPlex 3090
+- [x] Added a TP-Link 8-port Ethernet switch as the central wired homelab connection point
 - [x] Verified static Proxmox management IP on PVE-02
 - [x] Diagnosed network reachability versus application availability
 - [x] Investigated EXT4 read-only recovery on PVE-02
