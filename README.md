@@ -21,13 +21,24 @@ This repository documents my practical learning journey with Linux, networking, 
 - Intel Core i5-10500T
 - 6 cores / 12 threads
 - 16 GB RAM
-- Proxmox VE 9.2.20
-- Running kernel: `7.0.14-17-pve`
+- Proxmox VE 9.2.21
+- Running kernel: `7.0.14-20-pve`
 - Secondary virtualization and infrastructure lab node
 - Hostname: `pve3090`
 - Static management address: `192.168.1.165:8006`
 - Samsung SSD 840 Series 120 GB SATA system disk
 - NVMe/Kioxia storage detection retained as a future troubleshooting task
+
+### Additional node - Dell OptiPlex 3080 Micro (`pve3080b`)
+
+- Intel Core i5-10500T
+- 8 GB DDR4-2666 RAM
+- Proxmox VE 9.2.21
+- Running kernel: `7.0.14-20-pve`
+- SATA SSD system disk
+- Hostname: `pve3080b`
+- Static management address: `192.168.1.167:8006`
+- Fresh Proxmox node reserved for future workloads
 
 ## Technologies
 
@@ -69,15 +80,25 @@ Home Network
 │       │   └── EXT4 mounted at /mnt/pve-backup
 │       └── docker01 - old LXC removed; clean rebuild planned
 │
-└── PVE-02 - Dell OptiPlex 3090 Micro
-    └── Proxmox VE 9.2.20 - 192.168.1.165
-        ├── Samsung SSD 840 Series SATA system disk
-        └── VM 100 - ubuntu-server
-            └── Ubuntu Server 24.04.5 LTS - 192.168.1.106
-                ├── 2 vCPU / 2 GB RAM / 20 GiB disk
-                ├── SSH Server
-                ├── QEMU Guest Agent
-                └── DHCP reservation + Start at boot
+├── PVE-02 - Dell OptiPlex 3090 Micro
+│   └── Proxmox VE 9.2.21 - 192.168.1.165
+│       ├── Samsung SSD 840 Series 120 GB SATA system disk
+│       ├── VM 100 - ubuntu-server
+│       │   └── Ubuntu Server - 192.168.1.106
+│       │       ├── 2 vCPU / 2 GB RAM / 20 GiB disk
+│       │       ├── QEMU Guest Agent
+│       │       └── Start at boot
+│       ├── VM 101 - ubuntu-server-01
+│       │   └── Ubuntu Server - 192.168.1.111
+│       │       ├── 2 vCPU / 2 GB RAM / 32 GiB disk
+│       │       ├── QEMU Guest Agent
+│       │       └── Start at boot
+│       └── lenovo-backup - NFS 4.2 remote backup storage
+│           └── 192.168.1.164:/mnt/pve-backup
+│
+└── Additional node - Dell OptiPlex 3080 Micro
+    └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
+        └── Clean node for future workloads
 ```
 
 ## Network
@@ -88,7 +109,9 @@ Home Network
 | --- | --- | --- |
 | PVE-01 - Lenovo V520s | `192.168.1.164:8006` | Primary Proxmox management |
 | PVE-02 - OptiPlex 3090 | `192.168.1.165:8006` | Secondary Proxmox management |
-| ubuntu-server | `192.168.1.106` | Ubuntu Server VM on PVE-02 |
+| pve3080b - OptiPlex 3080 | `192.168.1.167:8006` | Additional Proxmox management |
+| ubuntu-server | `192.168.1.106` | Ubuntu Server VM 100 on PVE-02 |
+| ubuntu-server-01 | `192.168.1.111` | Ubuntu Server VM 101 on PVE-02 |
 | SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
 
 The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
@@ -119,6 +142,8 @@ The old LXC 100 / `docker01` workload was stopped and its orphaned `local-lvm:vm
 
 The node uses the Proxmox `pve-no-subscription` repository and was updated to Proxmox VE 9.2.20 with kernel `7.0.14-17-pve` on 15 September 2026.
 
+On 1 October 2026, `backup-storage` was also exported over NFS specifically to `pve3090` at `192.168.1.165`. The export is used as an off-host secondary backup target for the Ubuntu VMs on PVE-02.
+
 ### PVE-02 - Dell OptiPlex 3090
 
 The second Proxmox node was added to expand the lab and provide another system for virtualization, networking and infrastructure troubleshooting.
@@ -140,9 +165,15 @@ A later storage session tested a Samsung SATA SSD and a Kioxia NVMe device. Linu
 
 On 15 September 2026, the node was used for a practical networking and maintenance session. The LAN connection between PVE-01 and PVE-02 was verified with ICMP and SSH. A wrong default gateway (`192.168.1.1`) and DNS resolver (`192.168.1.1`) were identified on PVE-02 by comparing its configuration with the working Lenovo node. Both were corrected to `192.168.1.254`. Internet access, DNS resolution and APT were then validated independently.
 
-The Enterprise PVE and unused Ceph Enterprise repositories were disabled on PVE-02, the `pve-no-subscription` repository was configured, and a simulated full upgrade was reviewed before applying updates. The node finished the session on Proxmox VE 9.2.20 with kernel `7.0.14-17-pve`, matching PVE-01.
+The Enterprise PVE and unused Ceph Enterprise repositories were disabled on PVE-02, the `pve-no-subscription` repository was configured, and a simulated full upgrade was reviewed before applying updates. On 1 October 2026, the node was updated again to Proxmox VE 9.2.21 with kernel `7.0.14-20-pve`.
 
 Later the same day, PVE-02 received its first full virtual machine: `VM 100 - ubuntu-server`. Ubuntu Server 24.04.5 LTS was installed with 2 vCPU, 2 GB RAM and a 20 GiB virtual disk on `local-lvm`. Its VirtIO network adapter is attached to `vmbr0`, giving the guest direct access to the home LAN at reserved address `192.168.1.106`. OpenSSH and the QEMU Guest Agent were enabled and tested, the VM was configured to start automatically with the host, and a reboot test confirmed that networking, SSH and guest-agent integration return correctly.
+
+PVE-02 now also runs `VM 101 - ubuntu-server-01` with 2 vCPU, 2 GB RAM, a 32 GiB virtual disk, QEMU Guest Agent integration and address `192.168.1.111`. Both VMs are configured to start automatically.
+
+On 1 October 2026, PVE-02 received a full maintenance audit. The Samsung SSD 840 Series 120 GB system disk passed SMART health and self-test checks, CPU temperatures were approximately 28-32°C, the host had about 11 GiB RAM available, and a high guest RX-drop counter was investigated across the physical NIC, TAP, VirtIO and Linux protocol layers. No meaningful packet loss was found.
+
+The Lenovo `backup-storage` disk was then added to PVE-02 as NFS storage named `lenovo-backup`. Manual snapshot backups of VM 100 and VM 101 completed successfully and both archives passed `zstd -t` integrity tests. A daily 03:00 Proxmox backup job now protects both VMs using Zstandard compression, `keep-last=7` retention and repeat-missed scheduling.
 
 Full troubleshooting and maintenance notes are available here:
 
@@ -151,6 +182,7 @@ Full troubleshooting and maintenance notes are available here:
 - [Network and Proxmox maintenance - 15 September 2026](docs/network-maintenance-2026-09-15.md)
 - [First Ubuntu Server VM on PVE-02 - 15 September 2026](docs/first-vm-ubuntu-server-2026-09-15.md)
 - [Lenovo V520s storage upgrade and cleanup - 23 September 2026](docs/lenovo-storage-upgrade-2026-09-23.md)
+- [Homelab maintenance and automated backups - 1 October 2026](docs/homelab-maintenance-2026-10-01.md)
 
 ## Docker Services
 
@@ -402,6 +434,7 @@ The goal of this homelab is to develop practical skills in:
 - [x] Practised safe upgrade simulation with `apt -s full-upgrade`
 - [x] Updated PVE-01 and PVE-02 to Proxmox VE 9.2.20
 - [x] Updated PVE-01 and PVE-02 to kernel `7.0.14-17-pve`
+- [x] Updated PVE-02 to Proxmox VE 9.2.21 and kernel `7.0.14-20-pve`
 - [x] Deployed the first workload on PVE-02
 - [x] Created VM 100 `ubuntu-server` on PVE-02 and connected it through `vmbr0`
 - [x] Installed Ubuntu Server 24.04.5 LTS on VM 100
@@ -410,10 +443,16 @@ The goal of this homelab is to develop practical skills in:
 - [x] Reserved `192.168.1.106` for the Ubuntu VM using DHCP reservation
 - [x] Configured VM 100 to start automatically with PVE-02
 - [x] Reboot-tested VM 100 and verified IP, SSH and QEMU Guest Agent recovery
+- [x] Added VM 101 `ubuntu-server-01` on PVE-02
+- [x] Audited PVE-02 CPU, RAM, network and Samsung SSD 840 health
+- [x] Installed Proxmox VE 9.2.21 on `pve3080b` at `192.168.1.167`
+- [x] Exported Lenovo `backup-storage` to PVE-02 over NFS
+- [x] Added `lenovo-backup` as Proxmox NFS storage on PVE-02
+- [x] Validated VM 100 and VM 101 backups with `zstd -t`
+- [x] Configured daily 03:00 automated backups for VM 100 and VM 101 with `keep-last=7`
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Learn Docker networking in more depth
-- [ ] Configure backups
 - [ ] Improve homelab security
 - [ ] Revisit NVMe support on PVE-02 using a safe test path
 - [ ] Monitor PVE-02 storage health
