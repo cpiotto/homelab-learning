@@ -29,6 +29,20 @@ This repository documents my practical learning journey with Linux, networking, 
 - Samsung SSD 840 Series 120 GB SATA system disk
 - NVMe/Kioxia storage detection retained as a future troubleshooting task
 
+### PVE-03 - Dell OptiPlex 3080 Micro
+
+- Intel Core i5-10500T
+- 6 cores / 12 threads
+- 16 GB DDR4-2666 RAM (2 x 8 GB)
+- Proxmox VE 9.2.21
+- Running kernel: `7.0.14-20-pve`
+- Samsung MZ7LN256HCHP 256 GB SATA system disk
+- Hostname: `pve3080`
+- FQDN: `pve3080.home.arpa`
+- Static management address: `192.168.1.166:8006`
+- Realtek Gigabit Ethernet at 1 Gb/s full duplex
+- Clean standalone node prepared for infrastructure, monitoring, networking and automation workloads
+
 ### Additional node - Dell OptiPlex 3080 Micro (`pve3080b`)
 
 - Intel Core i5-10500T
@@ -106,6 +120,12 @@ Home Network
 │       └── lenovo-backup - NFS 4.2 remote backup storage
 │           └── 192.168.1.164:/mnt/pve-backup
 │
+├── PVE-03 - Dell OptiPlex 3080 Micro
+│   └── pve3080 - Proxmox VE 9.2.21 - 192.168.1.166
+│       ├── Samsung MZ7LN256HCHP 256 GB SATA system disk
+│       ├── local + local-lvm storage
+│       └── Clean standalone node prepared for new infrastructure workloads
+│
 └── Additional node - Dell OptiPlex 3080 Micro
     └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
         └── Clean node for future workloads
@@ -124,7 +144,7 @@ A TP-Link 8-port Ethernet switch was added as the central wired connection point
 | 1 | Uplink to wall / home network |
 | 2 | Dell OptiPlex 3090 - `pve3090` |
 | 3 | Lenovo ThinkCentre V520s - `pve` |
-| 4 | Dell OptiPlex 3080 |
+| 4 | Dell OptiPlex 3080 - `pve3080` |
 | 5-8 | Available for future homelab devices |
 
 The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 features are not configured on the switch itself.
@@ -133,6 +153,7 @@ The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 fe
 | --- | --- | --- |
 | PVE-01 - Lenovo V520s | `192.168.1.164:8006` | Primary Proxmox management |
 | PVE-02 - OptiPlex 3090 | `192.168.1.165:8006` | Secondary Proxmox management |
+| PVE-03 - OptiPlex 3080 | `192.168.1.166:8006` | Infrastructure / learning Proxmox node |
 | pve3080b - OptiPlex 3080 | `192.168.1.167:8006` | Additional Proxmox management |
 | ubuntu-server | `192.168.1.106` | Ubuntu Server VM 100 on PVE-02 |
 | ubuntu-server-01 | `192.168.1.111` | Ubuntu Server VM 101 on PVE-02 |
@@ -142,7 +163,7 @@ The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. I
 
 The `ubuntu-server` VM also uses DHCP with a router reservation. The router maps MAC address `BC:24:11:47:01:A7` to `192.168.1.106`, so the guest keeps a predictable address while Netplan remains DHCP-based.
 
-Both Proxmox hosts use the LAN gateway and DNS resolver at `192.168.1.254`.
+The Proxmox nodes use the LAN gateway and DNS resolver at `192.168.1.254`.
 
 The OptiPlex Proxmox node uses a static address configured directly on the Proxmox bridge `vmbr0`:
 
@@ -207,6 +228,23 @@ Full troubleshooting and maintenance notes are available here:
 - [First Ubuntu Server VM on PVE-02 - 15 September 2026](docs/first-vm-ubuntu-server-2026-09-15.md)
 - [Lenovo V520s storage upgrade and cleanup - 23 September 2026](docs/lenovo-storage-upgrade-2026-09-23.md)
 - [Homelab maintenance and automated backups - 1 October 2026](docs/homelab-maintenance-2026-10-01.md)
+- [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
+
+### PVE-03 - Dell OptiPlex 3080
+
+On 3 October 2026, `pve3080` received a full baseline audit before deploying any workloads. The node was upgraded from Proxmox VE 9.2.20 / kernel `7.0.14-19-pve` to Proxmox VE 9.2.21 / kernel `7.0.14-20-pve`, then rebooted and verified.
+
+The audit covered CPU topology and temperatures, memory and swap, LVM and Proxmox storage, SSD SMART health, filesystem capacity and inodes, networking, DNS, link negotiation, hostname/FQDN resolution, NTP, Proxmox services, current-boot logs, cluster state, firewall state, scheduled jobs, PCI devices and USB devices.
+
+The Realtek Ethernet interface was confirmed at 1 Gb/s full duplex, with `vmbr0` providing the static management address `192.168.1.166/24` and gateway `192.168.1.254`. Internet connectivity and DNS resolution were validated independently.
+
+A stale `iface nic1 inet manual` entry was also identified in `/etc/network/interfaces`. The nonexistent interface was checked for dependencies, the network configuration was backed up, the unused line was removed, and the change was verified with `diff -u`.
+
+The node currently has no VMs or LXC containers and no automated backup job. It is intentionally being kept clean for the next learning phase, where it will host infrastructure services that add new skills rather than simply duplicate the workloads already running on `pve3090`.
+
+Full audit notes:
+
+- [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
 
 ## Docker Services
 
@@ -360,6 +398,23 @@ bridge link
 ping -c 4
 poweroff
 reboot
+sensors
+dmidecode -t memory
+dmidecode -t 16
+ethtool nic0
+timedatectl
+systemctl --failed
+journalctl -p 3 -b --no-pager
+journalctl --disk-usage
+df -h
+df -i
+pvecm status
+pve-firewall status
+systemctl list-timers --all
+crontab -l
+lspci
+lsusb
+diff -u
 ```
 
 ### Docker
@@ -475,6 +530,13 @@ The goal of this homelab is to develop practical skills in:
 - [x] Added `lenovo-backup` as Proxmox NFS storage on PVE-02
 - [x] Validated VM 100 and VM 101 backups with `zstd -t`
 - [x] Configured daily 03:00 automated backups for VM 100 and VM 101 with `keep-last=7`
+- [x] Updated `pve3080` to Proxmox VE 9.2.21 and kernel `7.0.14-20-pve`
+- [x] Completed a full baseline audit of `pve3080` before deploying workloads
+- [x] Verified `pve3080` Ethernet at 1 Gb/s full duplex and validated gateway, Internet and DNS
+- [x] Audited `pve3080` CPU, temperatures, RAM, swap, SSD SMART, LVM, filesystems and inodes
+- [x] Verified `pve3080` hostname/FQDN, NTP and core Proxmox services
+- [x] Removed the stale `nic1` network entry using backup, dependency search and diff verification
+- [ ] Deploy the first infrastructure learning workload on `pve3080`
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Learn Docker networking in more depth
