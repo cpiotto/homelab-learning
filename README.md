@@ -8,8 +8,8 @@ This repository documents my practical learning journey with Linux, networking, 
 
 - Intel Core i5-7400
 - 16 GB RAM
-- Proxmox VE 9.2.20
-- Running kernel: `7.0.14-17-pve`
+- Proxmox VE 9.2.21
+- Running kernel: `7.0.14-20-pve`
 - Samsung SSD 830 256 GB SATA system disk
 - Samsung PM991a 256 GB NVMe as `nvme-storage` for VMs/LXC
 - Samsung MZ7LN256HCHP 256 GB SATA as `backup-storage`
@@ -41,7 +41,8 @@ This repository documents my practical learning journey with Linux, networking, 
 - FQDN: `pve3080.home.arpa`
 - Static management address: `192.168.1.166:8006`
 - Realtek Gigabit Ethernet at 1 Gb/s full duplex
-- Clean standalone node prepared for infrastructure, monitoring, networking and automation workloads
+- Infrastructure / monitoring node
+- Hosts LXC 200 `monitor01` for Prometheus, Grafana and Uptime Kuma
 
 ### Additional node - Dell OptiPlex 3080 Micro (`pve3080b`)
 
@@ -52,7 +53,8 @@ This repository documents my practical learning journey with Linux, networking, 
 - SATA SSD system disk
 - Hostname: `pve3080b`
 - Static management address: `192.168.1.167:8006`
-- Fresh Proxmox node reserved for future workloads
+- Baseline audit completed on 6 October 2026
+- Clean node reserved for testing, security and automation workloads
 
 ### Network switch
 
@@ -75,6 +77,10 @@ This repository documents my practical learning journey with Linux, networking, 
 - Docker Compose
 - Portainer
 - Uptime Kuma
+- Prometheus
+- PromQL
+- Grafana
+- Node Exporter
 - SSH / OpenSSH
 - QEMU Guest Agent
 - Linux administration
@@ -124,11 +130,16 @@ Home Network
 │   └── pve3080 - Proxmox VE 9.2.21 - 192.168.1.166
 │       ├── Samsung MZ7LN256HCHP 256 GB SATA system disk
 │       ├── local + local-lvm storage
-│       └── Clean standalone node prepared for new infrastructure workloads
+│       └── LXC 200 - monitor01 - 192.168.1.238
+│           ├── Debian 13
+│           ├── Docker + Docker Compose
+│           ├── Uptime Kuma - port 3001
+│           ├── Grafana - port 3000
+│           └── Prometheus - port 9090
 │
 └── Additional node - Dell OptiPlex 3080 Micro
     └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
-        └── Clean node for future workloads
+        └── Clean node reserved for testing, security and automation
 ```
 
 ## Network
@@ -157,6 +168,10 @@ The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 fe
 | pve3080b - OptiPlex 3080 | `192.168.1.167:8006` | Additional Proxmox management |
 | ubuntu-server | `192.168.1.106` | Ubuntu Server VM 100 on PVE-02 |
 | ubuntu-server-01 | `192.168.1.111` | Ubuntu Server VM 101 on PVE-02 |
+| monitor01 | `192.168.1.238` | Debian 13 monitoring LXC on PVE-03 |
+| Grafana | `192.168.1.238:3000` | Monitoring dashboard |
+| Uptime Kuma | `192.168.1.238:3001` | Availability monitoring |
+| Prometheus | `192.168.1.238:9090` | Metrics collection and time-series database |
 | SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
 
 The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
@@ -229,6 +244,8 @@ Full troubleshooting and maintenance notes are available here:
 - [Lenovo V520s storage upgrade and cleanup - 23 September 2026](docs/lenovo-storage-upgrade-2026-09-23.md)
 - [Homelab maintenance and automated backups - 1 October 2026](docs/homelab-maintenance-2026-10-01.md)
 - [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
+- [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
+- [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -240,43 +257,63 @@ The Realtek Ethernet interface was confirmed at 1 Gb/s full duplex, with `vmbr0`
 
 A stale `iface nic1 inet manual` entry was also identified in `/etc/network/interfaces`. The nonexistent interface was checked for dependencies, the network configuration was backed up, the unused line was removed, and the change was verified with `diff -u`.
 
-The node currently has no VMs or LXC containers and no automated backup job. It is intentionally being kept clean for the next learning phase, where it will host infrastructure services that add new skills rather than simply duplicate the workloads already running on `pve3090`.
+On 6 October 2026, `pve3080` received its first infrastructure workload: unprivileged LXC 200 `monitor01`. The Debian 13 container runs Docker and Docker Compose with Uptime Kuma, Prometheus and Grafana. Node Exporter was installed on all four Proxmox hosts, allowing Prometheus to collect host metrics and Grafana to display CPU, RAM, disk, load, physical NIC traffic and current host status.
+
+The monitoring container uses a router-reserved address at `192.168.1.238` and starts automatically with the host.
+
+Full notes:
+
+- [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
+- [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
+
+### PVE-04 - Dell OptiPlex 3080 (`pve3080b`)
+
+On 6 October 2026, `pve3080b` received a full baseline audit. The node was verified on Proxmox VE 9.2.21 / kernel `7.0.14-20-pve`, with an Intel Core i5-10500T, 8 GB DDR4-2666 RAM and a 256 GB SATA SSD.
+
+The audit covered CPU and temperatures, memory, storage, SMART, networking, DNS, NTP, Proxmox services, logs, firewall state, scheduled jobs and firmware information. The node was healthy enough for continued lab use and remains intentionally clean for future testing, security and automation work.
 
 Full audit notes:
 
-- [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
+- [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
 
-## Docker Services
+## Monitoring Services
 
-Portainer and Uptime Kuma were previously hosted in the old `docker01` LXC. That container was removed during the 23 September 2026 storage cleanup, and these services are currently awaiting redeployment on the rebuilt environment.
-
-### Portainer
-
-Portainer provides a graphical interface for managing Docker.
-
-It is deployed using:
-
-- Docker container
-- HTTPS port `9443`
-- Persistent Docker volume `portainer_data`
-- Docker socket access for local Docker management
+Monitoring services are now hosted in Debian 13 LXC 200 `monitor01` on `pve3080`.
 
 ### Uptime Kuma
 
-Uptime Kuma is deployed using Docker Compose through a Portainer Stack.
+Uptime Kuma 2 runs in Docker Compose with persistent storage and automatic restart.
 
-It uses:
+It monitors the availability of all four Proxmox hosts:
 
-- Docker image `louislam/uptime-kuma:2`
-- Port `3001`
-- Persistent volume `uptime-kuma-data`
-- Automatic restart policy
-- SQLite database
+- `pve`
+- `pve3090`
+- `pve3080`
+- `pve3080b`
 
-Current monitors include:
+### Prometheus
 
-- Proxmox VE
-- Portainer
+Prometheus runs in Docker and scrapes Node Exporter on all four Proxmox hosts every 15 seconds.
+
+It stores the time-series data used by Grafana.
+
+### Grafana
+
+Grafana runs in Docker and uses Prometheus as its data source.
+
+The `Homelab Piotto - Monitoring` dashboard currently shows:
+
+- CPU usage
+- RAM usage
+- root filesystem usage
+- normalised system load
+- physical NIC download
+- physical NIC upload
+- current host UP/DOWN state
+
+### Portainer
+
+Portainer was used in the earlier `docker01` environment. It has not yet been redeployed in `monitor01`.
 
 ## Remote Administration
 
@@ -428,6 +465,21 @@ docker logs
 docker volume create
 docker volume ls
 docker restart
+docker compose version
+docker compose config
+docker compose up -d
+docker exec
+docker kill --signal HUP
+```
+
+### Monitoring / networking
+
+```bash
+promtool check config
+ethtool -S nic0
+ip -s link show nic0
+cat /proc/net/dev
+tcpdump
 ```
 
 ### SSH and Windows network diagnostics
@@ -536,7 +588,17 @@ The goal of this homelab is to develop practical skills in:
 - [x] Audited `pve3080` CPU, temperatures, RAM, swap, SSD SMART, LVM, filesystems and inodes
 - [x] Verified `pve3080` hostname/FQDN, NTP and core Proxmox services
 - [x] Removed the stale `nic1` network entry using backup, dependency search and diff verification
-- [ ] Deploy the first infrastructure learning workload on `pve3080`
+- [x] Completed a full baseline audit of `pve3080b`
+- [x] Deployed the first infrastructure learning workload on `pve3080`
+- [x] Created Debian 13 LXC 200 `monitor01`
+- [x] Installed Docker and Docker Compose in `monitor01`
+- [x] Deployed Uptime Kuma in `monitor01`
+- [x] Installed Node Exporter on all four Proxmox hosts
+- [x] Deployed Prometheus and configured all four Proxmox scrape targets
+- [x] Deployed Grafana and connected the Prometheus data source
+- [x] Built the `Homelab Piotto - Monitoring` dashboard
+- [x] Added CPU, RAM, disk, load, download, upload and host-status panels
+- [x] Investigated Linux NIC/bridge RX-drop counters without making unnecessary changes
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Learn Docker networking in more depth
