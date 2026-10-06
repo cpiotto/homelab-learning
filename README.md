@@ -102,13 +102,13 @@ This repository documents my practical learning journey with Linux, networking, 
 ```text
 Home Network
 ├── PVE-01 - Lenovo ThinkCentre V520s
-│   └── Proxmox VE 9.2.20 - 192.168.1.164
+│   └── Proxmox VE 9.2.21 - 192.168.1.164
 │       ├── Samsung SSD 830 256 GB SATA - Proxmox system disk
 │       ├── nvme-storage - Samsung PM991a 256 GB NVMe
 │       │   └── LVM-thin storage for new VMs/LXC
 │       ├── backup-storage - Samsung MZ7LN256HCHP 256 GB SATA
 │       │   └── EXT4 mounted at /mnt/pve-backup
-│       └── docker01 - old LXC removed; clean rebuild planned
+│       └── docker01 - old LXC removed; monitoring rebuilt separately on pve3080
 │
 ├── PVE-02 - Dell OptiPlex 3090 Micro
 │   └── Proxmox VE 9.2.21 - 192.168.1.165
