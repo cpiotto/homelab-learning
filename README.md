@@ -43,6 +43,7 @@ This repository documents my practical learning journey with Linux, networking, 
 - Realtek Gigabit Ethernet at 1 Gb/s full duplex
 - Infrastructure / monitoring node
 - Hosts LXC 200 `monitor01` for Prometheus, Grafana and Uptime Kuma
+- Hosts LXC 201 `dns01` for BIND9 internal DNS
 
 ### Additional node - Dell OptiPlex 3080 Micro (`pve3080b`)
 
@@ -90,6 +91,11 @@ This repository documents my practical learning journey with Linux, networking, 
 - Linux bridges
 - Routing and default gateways
 - DNS troubleshooting
+- BIND9
+- Authoritative and recursive DNS
+- Forward and reverse DNS zones
+- DNS A and PTR records
+- `dig` / `nslookup`
 - EXT4 / LVM
 - SMART / NVMe diagnostics
 - SATA / NVMe storage troubleshooting
@@ -130,12 +136,16 @@ Home Network
 │   └── pve3080 - Proxmox VE 9.2.21 - 192.168.1.166
 │       ├── Samsung MZ7LN256HCHP 256 GB SATA system disk
 │       ├── local + local-lvm storage
-│       └── LXC 200 - monitor01 - 192.168.1.238
+│       ├── LXC 200 - monitor01 - 192.168.1.238
+│       │   ├── Debian 13
+│       │   ├── Docker + Docker Compose
+│       │   ├── Uptime Kuma - port 3001
+│       │   ├── Grafana - port 3000
+│       │   └── Prometheus - port 9090
+│       └── LXC 201 - dns01 - 192.168.1.195
 │           ├── Debian 13
-│           ├── Docker + Docker Compose
-│           ├── Uptime Kuma - port 3001
-│           ├── Grafana - port 3000
-│           └── Prometheus - port 9090
+│           ├── BIND9 - port 53
+│           └── Node Exporter - port 9100
 │
 └── Additional node - Dell OptiPlex 3080 Micro
     └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
@@ -172,13 +182,14 @@ The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 fe
 | Grafana | `192.168.1.238:3000` | Monitoring dashboard |
 | Uptime Kuma | `192.168.1.238:3001` | Availability monitoring |
 | Prometheus | `192.168.1.238:9090` | Metrics collection and time-series database |
+| dns01 | `192.168.1.195:53` | BIND9 internal DNS |
 | SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
 
 The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
 
 The `ubuntu-server` VM also uses DHCP with a router reservation. The router maps MAC address `BC:24:11:47:01:A7` to `192.168.1.106`, so the guest keeps a predictable address while Netplan remains DHCP-based.
 
-The Proxmox nodes use the LAN gateway and DNS resolver at `192.168.1.254`.
+The Proxmox nodes currently use the LAN gateway at `192.168.1.254`. A dedicated internal DNS server, `dns01` at `192.168.1.195`, is now being tested on selected clients before any router-wide DNS change.
 
 The OptiPlex Proxmox node uses a static address configured directly on the Proxmox bridge `vmbr0`:
 
@@ -246,6 +257,7 @@ Full troubleshooting and maintenance notes are available here:
 - [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
 - [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
 - [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
+- [Internal DNS infrastructure - 7 October 2026](docs/dns-infrastructure-2026-10-07.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -261,10 +273,15 @@ On 6 October 2026, `pve3080` received its first infrastructure workload: unprivi
 
 The monitoring container uses a router-reserved address at `192.168.1.238` and starts automatically with the host.
 
+On 7 October 2026, `pve3080` also received LXC 201 `dns01`, a dedicated Debian 13 BIND9 server at `192.168.1.195`. It is authoritative for the internal `home.arpa` zone, provides reverse DNS for the homelab IPv4 subnet, resolves external Internet names, and is monitored through Node Exporter, Prometheus, Grafana and Uptime Kuma.
+
+The DNS service was validated from Proxmox and Windows clients before any router-wide DNS change. Internal service names such as `grafana.home.arpa` now resolve successfully.
+
 Full notes:
 
 - [PVE-03 / OptiPlex 3080 baseline audit - 3 October 2026](docs/pve3080-audit-2026-10-03.md)
 - [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
+- [Internal DNS infrastructure - 7 October 2026](docs/dns-infrastructure-2026-10-07.md)
 
 ### PVE-04 - Dell OptiPlex 3080 (`pve3080b`)
 
@@ -284,16 +301,13 @@ Monitoring services are now hosted in Debian 13 LXC 200 `monitor01` on `pve3080`
 
 Uptime Kuma 2 runs in Docker Compose with persistent storage and automatic restart.
 
-It monitors the availability of all four Proxmox hosts:
+It monitors the availability of all four Proxmox hosts plus `dns01`.
 
-- `pve`
-- `pve3090`
-- `pve3080`
-- `pve3080b`
+A dedicated DNS monitor also queries `pve.home.arpa` through `dns01` and verifies that the returned A record is `192.168.1.164`. This validates the DNS service itself rather than only host reachability.
 
 ### Prometheus
 
-Prometheus runs in Docker and scrapes Node Exporter on all four Proxmox hosts every 15 seconds.
+Prometheus runs in Docker and scrapes Node Exporter on all four Proxmox hosts plus `dns01` every 15 seconds.
 
 It stores the time-series data used by Grafana.
 
@@ -314,6 +328,30 @@ The `Homelab Piotto - Monitoring` dashboard currently shows:
 ### Portainer
 
 Portainer was used in the earlier `docker01` environment. It has not yet been redeployed in `monitor01`.
+
+## Internal DNS
+
+Internal DNS is provided by BIND9 in LXC 201 `dns01` on `pve3080`.
+
+- DNS server: `192.168.1.195`
+- internal zone: `home.arpa`
+- reverse zone: `1.168.192.in-addr.arpa`
+- authoritative records for homelab hosts and services
+- recursive resolution for Internet names
+- A and PTR records
+- monitored by Prometheus/Grafana and Uptime Kuma
+- tested from a Windows client over IPv4 and IPv6
+
+Examples:
+
+```text
+pve.home.arpa       -> 192.168.1.164
+pve3090.home.arpa   -> 192.168.1.165
+grafana.home.arpa   -> 192.168.1.238
+dns01.home.arpa     -> 192.168.1.195
+```
+
+The service is currently being validated on selected clients before any network-wide DNS distribution through the router.
 
 ## Remote Administration
 
@@ -599,6 +637,18 @@ The goal of this homelab is to develop practical skills in:
 - [x] Built the `Homelab Piotto - Monitoring` dashboard
 - [x] Added CPU, RAM, disk, load, download, upload and host-status panels
 - [x] Investigated Linux NIC/bridge RX-drop counters without making unnecessary changes
+- [x] Created Debian 13 LXC 201 `dns01`
+- [x] Reserved `192.168.1.195` for `dns01`
+- [x] Installed and configured BIND9
+- [x] Created authoritative `home.arpa` forward zone
+- [x] Created reverse DNS zone with PTR records
+- [x] Validated BIND configuration with `named-checkzone` and `named-checkconf`
+- [x] Verified internal and external DNS resolution with `dig`
+- [x] Verified DNS resolution from Windows with `nslookup`
+- [x] Accessed Grafana through `grafana.home.arpa`
+- [x] Added `dns01` to Node Exporter, Prometheus and Grafana
+- [x] Added Uptime Kuma Ping and DNS service monitors for `dns01`
+- [ ] Decide on router-wide DNS rollout after client stability testing
 - [ ] Configure Uptime Kuma notifications
 - [ ] Create a homelab status page
 - [ ] Learn Docker networking in more depth
