@@ -7,7 +7,8 @@ This repository documents my practical learning journey with Linux, networking, 
 ### PVE-01 - Lenovo ThinkCentre V520s
 
 - Intel Core i5-7400
-- 16 GB RAM
+- 32 GB DDR4 RAM (4 x 8 GB, running at 2400 MT/s)
+- NVIDIA Quadro P1000 4 GB installed and reserved for future PCIe passthrough labs
 - Proxmox VE 9.2.21
 - Running kernel: `7.0.14-20-pve`
 - Samsung SSD 830 256 GB SATA system disk
@@ -48,7 +49,7 @@ This repository documents my practical learning journey with Linux, networking, 
 ### Additional node - Dell OptiPlex 3080 Micro (`pve3080b`)
 
 - Intel Core i5-10500T
-- 8 GB DDR4-2666 RAM
+- 16 GB DDR4-2666 RAM (2 x 8 GB)
 - Proxmox VE 9.2.21
 - Running kernel: `7.0.14-20-pve`
 - SATA SSD system disk
@@ -109,6 +110,8 @@ This repository documents my practical learning journey with Linux, networking, 
 Home Network
 ├── PVE-01 - Lenovo ThinkCentre V520s
 │   └── Proxmox VE 9.2.21 - 192.168.1.164
+│       ├── 32 GB DDR4 RAM
+│       ├── Quadro P1000 4 GB - reserved for future PCIe passthrough
 │       ├── Samsung SSD 830 256 GB SATA - Proxmox system disk
 │       ├── nvme-storage - Samsung PM991a 256 GB NVMe
 │       │   └── LVM-thin storage for new VMs/LXC
@@ -149,6 +152,7 @@ Home Network
 │
 └── Additional node - Dell OptiPlex 3080 Micro
     └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
+        ├── 16 GB DDR4-2666 RAM
         └── Clean node reserved for testing, security and automation
 ```
 
@@ -215,6 +219,8 @@ The node uses the Proxmox `pve-no-subscription` repository and was updated to Pr
 
 On 1 October 2026, `backup-storage` was also exported over NFS specifically to `pve3090` at `192.168.1.165`. The export is used as an off-host secondary backup target for the Ubuntu VMs on PVE-02.
 
+On 8 October 2026, the Lenovo was upgraded to 32 GB DDR4 using four 8 GB DIMMs. All modules were detected correctly and operate at a common 2400 MT/s. The installed Quadro P1000 4 GB was also confirmed on PCIe. It is reserved for a future GPU passthrough lab rather than requiring the proprietary NVIDIA driver on the Proxmox host. After the upgrade, all Proxmox storages and the NFS backup export were revalidated as active.
+
 ### PVE-02 - Dell OptiPlex 3090
 
 The second Proxmox node was added to expand the lab and provide another system for virtualization, networking and infrastructure troubleshooting.
@@ -258,6 +264,7 @@ Full troubleshooting and maintenance notes are available here:
 - [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
 - [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
 - [Internal DNS infrastructure - 7 October 2026](docs/dns-infrastructure-2026-10-07.md)
+- [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -287,11 +294,14 @@ Full notes:
 
 On 6 October 2026, `pve3080b` received a full baseline audit. The node was verified on Proxmox VE 9.2.21 / kernel `7.0.14-20-pve`, with an Intel Core i5-10500T, 8 GB DDR4-2666 RAM and a 256 GB SATA SSD.
 
+On 8 October 2026, memory was upgraded to 16 GB using two 8 GB DDR4 modules. Both DIMMs were detected correctly and run at 2666 MT/s, giving the node additional headroom for its planned automation, security and testing role.
+
 The audit covered CPU and temperatures, memory, storage, SMART, networking, DNS, NTP, Proxmox services, logs, firewall state, scheduled jobs and firmware information. The node was healthy enough for continued lab use and remains intentionally clean for future testing, security and automation work.
 
 Full audit notes:
 
 - [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
+- [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
 
 ## Monitoring Services
 
@@ -555,6 +565,8 @@ The goal of this homelab is to develop practical skills in:
 - [x] Configured Proxmox no-subscription repository
 - [x] Updated Proxmox
 - [x] Upgraded Lenovo homelab node to 16 GB RAM
+- [x] Upgraded Lenovo homelab node to 32 GB RAM (4 x 8 GB)
+- [x] Confirmed Quadro P1000 PCIe detection and reserved it for future passthrough
 - [x] Created Debian 13 LXC container
 - [x] Configured networking with DHCP
 - [x] Reserved a fixed DHCP address for docker01
@@ -627,6 +639,8 @@ The goal of this homelab is to develop practical skills in:
 - [x] Verified `pve3080` hostname/FQDN, NTP and core Proxmox services
 - [x] Removed the stale `nic1` network entry using backup, dependency search and diff verification
 - [x] Completed a full baseline audit of `pve3080b`
+- [x] Upgraded `pve3080b` to 16 GB DDR4 (2 x 8 GB at 2666 MT/s)
+- [x] Revalidated Lenovo storage and NFS backup path after hardware upgrades
 - [x] Deployed the first infrastructure learning workload on `pve3080`
 - [x] Created Debian 13 LXC 200 `monitor01`
 - [x] Installed Docker and Docker Compose in `monitor01`
