@@ -103,6 +103,10 @@ This repository documents my practical learning journey with Linux, networking, 
 - APT repository management
 - Monitoring
 - Infrastructure troubleshooting
+- Ansible
+- Infrastructure automation
+- Configuration management
+- Idempotent playbooks
 
 ## Current Architecture
 
@@ -153,7 +157,10 @@ Home Network
 └── Additional node - Dell OptiPlex 3080 Micro
     └── pve3080b - Proxmox VE 9.2.21 - 192.168.1.167
         ├── 16 GB DDR4-2666 RAM
-        └── Clean node reserved for testing, security and automation
+        └── LXC 202 - ansible01 - 192.168.1.121
+            ├── Debian 13
+            ├── Ansible Core 2.19.11
+            └── Automation controller for Linux lab targets
 ```
 
 ## Network
@@ -187,6 +194,7 @@ The switch is currently unmanaged, so VLANs, port isolation and other Layer 2 fe
 | Uptime Kuma | `192.168.1.238:3001` | Availability monitoring |
 | Prometheus | `192.168.1.238:9090` | Metrics collection and time-series database |
 | dns01 | `192.168.1.195:53` | BIND9 internal DNS |
+| ansible01 | `192.168.1.121` | Debian 13 Ansible automation controller on pve3080b |
 | SSH - ubuntu-server | `192.168.1.106:22` | Remote Ubuntu administration |
 
 The previous `docker01` LXC used a router DHCP reservation at `192.168.1.101`. Its old storage was removed on 23 September 2026 and a clean rebuild is planned.
@@ -265,6 +273,7 @@ Full troubleshooting and maintenance notes are available here:
 - [Central homelab monitoring stack - 6 October 2026](docs/monitoring-stack-2026-10-06.md)
 - [Internal DNS infrastructure - 7 October 2026](docs/dns-infrastructure-2026-10-07.md)
 - [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
+- [Ansible automation lab - 8 October 2026](docs/ansible-automation-2026-10-08.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -296,12 +305,15 @@ On 6 October 2026, `pve3080b` received a full baseline audit. The node was verif
 
 On 8 October 2026, memory was upgraded to 16 GB using two 8 GB DDR4 modules. Both DIMMs were detected correctly and run at 2666 MT/s, giving the node additional headroom for its planned automation, security and testing role.
 
+Later the same day, `pve3080b` received LXC 202 `ansible01`, a dedicated Debian 13 automation controller at `192.168.1.121`. Ansible Core 2.19.11 was installed, SSH key authentication was configured to VM 100 `ubuntu-server`, and the first inventory, ad-hoc command and YAML playbooks were tested successfully. The lab also demonstrated `become`, remote command execution and Ansible idempotence.
+
 The audit covered CPU and temperatures, memory, storage, SMART, networking, DNS, NTP, Proxmox services, logs, firewall state, scheduled jobs and firmware information. The node was healthy enough for continued lab use and remains intentionally clean for future testing, security and automation work.
 
 Full audit notes:
 
 - [PVE-04 / OptiPlex 3080 baseline audit - 6 October 2026](docs/pve3080b-audit-2026-10-06.md)
 - [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
+- [Ansible automation lab - 8 October 2026](docs/ansible-automation-2026-10-08.md)
 
 ## Monitoring Services
 
@@ -530,6 +542,16 @@ cat /proc/net/dev
 tcpdump
 ```
 
+### Ansible
+
+```bash
+ansible --version
+ansible -i inventory.ini -m ping
+ansible -i inventory.ini -m ansible.builtin.command -a "uptime"
+ansible-playbook -i inventory.ini system-check.yml
+ansible-playbook -i inventory.ini install-htop.yml -K
+```
+
 ### SSH and Windows network diagnostics
 
 ```text
@@ -558,6 +580,8 @@ The goal of this homelab is to develop practical skills in:
 - Remote server administration
 - Storage diagnostics
 - Infrastructure documentation
+- Infrastructure automation
+- Configuration management with Ansible
 
 ## Current Progress
 
@@ -641,6 +665,17 @@ The goal of this homelab is to develop practical skills in:
 - [x] Completed a full baseline audit of `pve3080b`
 - [x] Upgraded `pve3080b` to 16 GB DDR4 (2 x 8 GB at 2666 MT/s)
 - [x] Revalidated Lenovo storage and NFS backup path after hardware upgrades
+- [x] Created Debian 13 LXC 202 `ansible01` on `pve3080b`
+- [x] Reserved `192.168.1.121` for `ansible01`
+- [x] Installed and validated Ansible Core 2.19.11
+- [x] Fixed the Debian locale configuration required by Ansible
+- [x] Configured SSH key authentication from `ansible01` to VM 100
+- [x] Created the first Ansible inventory
+- [x] Verified the first Ansible `ping` against VM 100
+- [x] Executed the first remote command through Ansible
+- [x] Created and executed the first Ansible YAML playbook
+- [x] Used `become` for a privileged package-management playbook
+- [x] Demonstrated Ansible idempotence with the `htop` package state
 - [x] Deployed the first infrastructure learning workload on `pve3080`
 - [x] Created Debian 13 LXC 200 `monitor01`
 - [x] Installed Docker and Docker Compose in `monitor01`
