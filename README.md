@@ -274,6 +274,7 @@ Full troubleshooting and maintenance notes are available here:
 - [Internal DNS infrastructure - 7 October 2026](docs/dns-infrastructure-2026-10-07.md)
 - [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
 - [Ansible automation lab - 8 October 2026](docs/ansible-automation-2026-10-08.md)
+- [Ansible multi-host management - 9 October 2026](docs/ansible-automation-2026-10-09.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -306,6 +307,8 @@ On 6 October 2026, `pve3080b` received a full baseline audit. The node was verif
 On 8 October 2026, memory was upgraded to 16 GB using two 8 GB DDR4 modules. Both DIMMs were detected correctly and run at 2666 MT/s, giving the node additional headroom for its planned automation, security and testing role.
 
 Later the same day, `pve3080b` received LXC 202 `ansible01`, a dedicated Debian 13 automation controller at `192.168.1.121`. Ansible Core 2.19.11 was installed, SSH key authentication was configured to VM 100 `ubuntu-server`, and the first inventory, ad-hoc command and YAML playbooks were tested successfully. The lab also demonstrated `become`, remote command execution and Ansible idempotence.
+
+On 9 October 2026, VM 101 `ubuntu-server-01` was added as a second managed host. The inventory was reorganised with `group_vars`, both VMs were audited with Ansible Facts, incorrect `unbuntu-*` hostnames were corrected safely with backups, a reusable Ubuntu package baseline was applied, and `notify`/handler behaviour was demonstrated with the `cron` service.
 
 The audit covered CPU and temperatures, memory, storage, SMART, networking, DNS, NTP, Proxmox services, logs, firewall state, scheduled jobs and firmware information. The node was healthy enough for continued lab use and remains intentionally clean for future testing, security and automation work.
 
@@ -550,6 +553,11 @@ ansible -i inventory.ini -m ping
 ansible -i inventory.ini -m ansible.builtin.command -a "uptime"
 ansible-playbook -i inventory.ini system-check.yml
 ansible-playbook -i inventory.ini install-htop.yml -K
+ansible-playbook -i inventory.ini system-audit.yml
+ansible-playbook -i inventory.ini fix-hostnames.yml -K
+ansible-playbook -i inventory.ini baseline.yml -K
+ansible-playbook -i inventory.ini service-demo.yml -K
+ansible-inventory -i inventory.ini --graph
 ```
 
 ### SSH and Windows network diagnostics
@@ -676,6 +684,19 @@ The goal of this homelab is to develop practical skills in:
 - [x] Created and executed the first Ansible YAML playbook
 - [x] Used `become` for a privileged package-management playbook
 - [x] Demonstrated Ansible idempotence with the `htop` package state
+- [x] Added VM 101 `ubuntu-server-01` as a second Ansible-managed host
+- [x] Verified VM 101 SSH host fingerprint before trusting it
+- [x] Configured SSH key authentication from `ansible01` to VM 101
+- [x] Executed one Ansible playbook across both Ubuntu VMs
+- [x] Created a system-audit playbook using Ansible Facts
+- [x] Detected and corrected the `unbuntu-*` hostname typo on both VMs
+- [x] Backed up `/etc/hostname` and `/etc/hosts` before changing hostnames
+- [x] Validated hostname correction idempotence with `changed=0`
+- [x] Created and applied a reusable Ubuntu package baseline
+- [x] Moved common connection settings to `group_vars/ubuntu.yml`
+- [x] Verified the inventory hierarchy with `ansible-inventory --graph`
+- [x] Learned `notify` and handlers using the `cron` service
+- [x] Verified handlers run only when a dependent configuration changes
 - [x] Deployed the first infrastructure learning workload on `pve3080`
 - [x] Created Debian 13 LXC 200 `monitor01`
 - [x] Installed Docker and Docker Compose in `monitor01`
