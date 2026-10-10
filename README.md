@@ -256,6 +256,8 @@ Later the same day, PVE-02 received its first full virtual machine: `VM 100 - ub
 
 PVE-02 now also runs `VM 101 - ubuntu-server-01` with 2 vCPU, 2 GB RAM, a 32 GiB virtual disk, QEMU Guest Agent integration and address `192.168.1.111`. Both VMs are configured to start automatically.
 
+On 10 October 2026, both Ubuntu VMs were checked through Ansible for pending reboots after a kernel update. They were still running kernel `6.8.0-142-generic` while `6.8.0-146-generic` was installed. The VMs were rebooted one at a time through the Ansible `reboot` module, validated after each restart, and confirmed on kernel `6.8.0-146-generic` with no remaining reboot requirement.
+
 On 1 October 2026, PVE-02 received a full maintenance audit. The Samsung SSD 840 Series 120 GB system disk passed SMART health and self-test checks, CPU temperatures were approximately 28-32°C, the host had about 11 GiB RAM available, and a high guest RX-drop counter was investigated across the physical NIC, TAP, VirtIO and Linux protocol layers. No meaningful packet loss was found.
 
 The Lenovo `backup-storage` disk was then added to PVE-02 as NFS storage named `lenovo-backup`. Manual snapshot backups of VM 100 and VM 101 completed successfully and both archives passed `zstd -t` integrity tests. A daily 03:00 Proxmox backup job now protects both VMs using Zstandard compression, `keep-last=7` retention and repeat-missed scheduling.
@@ -275,6 +277,7 @@ Full troubleshooting and maintenance notes are available here:
 - [Homelab hardware upgrades - 8 October 2026](docs/hardware-upgrades-2026-10-08.md)
 - [Ansible automation lab - 8 October 2026](docs/ansible-automation-2026-10-08.md)
 - [Ansible multi-host management - 9 October 2026](docs/ansible-automation-2026-10-09.md)
+- [Ansible conditions and rolling maintenance - 10 October 2026](docs/ansible-automation-2026-10-10.md)
 
 ### PVE-03 - Dell OptiPlex 3080
 
@@ -309,6 +312,8 @@ On 8 October 2026, memory was upgraded to 16 GB using two 8 GB DDR4 modules. Bot
 Later the same day, `pve3080b` received LXC 202 `ansible01`, a dedicated Debian 13 automation controller at `192.168.1.121`. Ansible Core 2.19.11 was installed, SSH key authentication was configured to VM 100 `ubuntu-server`, and the first inventory, ad-hoc command and YAML playbooks were tested successfully. The lab also demonstrated `become`, remote command execution and Ansible idempotence.
 
 On 9 October 2026, VM 101 `ubuntu-server-01` was added as a second managed host. The inventory was reorganised with `group_vars`, both VMs were audited with Ansible Facts, incorrect `unbuntu-*` hostnames were corrected safely with backups, a reusable Ubuntu package baseline was applied, and `notify`/handler behaviour was demonstrated with the `cron` service.
+
+On 10 October 2026, Ansible conditional execution was extended with `when`, facts, `stat` and `register`. A reboot-detection workflow identified a pending kernel reboot on both Ubuntu VMs, which were then restarted and validated one at a time. A reusable `rolling-reboot.yml` playbook was created with `serial: 1` so future maintenance can process managed Ubuntu systems sequentially and only reboot hosts that actually require it.
 
 The audit covered CPU and temperatures, memory, storage, SMART, networking, DNS, NTP, Proxmox services, logs, firewall state, scheduled jobs and firmware information. The node was healthy enough for continued lab use and remains intentionally clean for future testing, security and automation work.
 
@@ -558,6 +563,11 @@ ansible-playbook -i inventory.ini fix-hostnames.yml -K
 ansible-playbook -i inventory.ini baseline.yml -K
 ansible-playbook -i inventory.ini service-demo.yml -K
 ansible-inventory -i inventory.ini --graph
+ansible-playbook -i inventory.ini conditions-demo.yml
+ansible-playbook -i inventory.ini conditions-facts.yml
+ansible-playbook -i inventory.ini reboot-check.yml
+ansible-playbook -i inventory.ini rolling-reboot.yml -K
+ansible ubuntu-server -i inventory.ini -b -K -m ansible.builtin.reboot -a "reboot_timeout=300"
 ```
 
 ### SSH and Windows network diagnostics
@@ -697,6 +707,16 @@ The goal of this homelab is to develop practical skills in:
 - [x] Verified the inventory hierarchy with `ansible-inventory --graph`
 - [x] Learned `notify` and handlers using the `cron` service
 - [x] Verified handlers run only when a dependent configuration changes
+- [x] Learned host-specific conditional execution with `when`
+- [x] Used Ansible Facts in conditional logic
+- [x] Used `stat` and `register` to detect `/var/run/reboot-required`
+- [x] Identified pending kernel reboot requirements on both Ubuntu VMs
+- [x] Checked active sessions before reboot maintenance
+- [x] Rebooted VM 100 and VM 101 safely one at a time through Ansible
+- [x] Verified both Ubuntu VMs on kernel `6.8.0-146-generic`
+- [x] Confirmed no reboot remained pending after maintenance
+- [x] Created `rolling-reboot.yml` with `serial: 1`
+- [x] Verified rolling reboot logic skips hosts that do not require restart
 - [x] Deployed the first infrastructure learning workload on `pve3080`
 - [x] Created Debian 13 LXC 200 `monitor01`
 - [x] Installed Docker and Docker Compose in `monitor01`
