@@ -2,6 +2,19 @@
 
 This repository documents my practical learning journey with Linux, networking, virtualization, containers, monitoring, troubleshooting and server administration.
 
+## Latest validated work — 13–14 October 2026
+
+- Extended Ansible management to `dns01` and `monitor01` in separate inventory groups.
+- Validated BIND forward/reverse resolution and applied DNS server package updates.
+- Updated Docker/containerd and other system packages on `monitor01`; verified application health and all six returned Prometheus scrape targets.
+- Created and validated reusable monitoring health and maintenance playbooks, including check-mode handling.
+- Added Lenovo NFS storage to `pve3080`; completed an off-host backup of CT 200.
+- Enabled a daily 04:00 stop-mode backup with ZSTD compression and `keep-last=7`.
+- Restored the archive as isolated CT 203, verified all three applications locally and shut down the test copy.
+- Recovery validation covered startup and basic application health; detailed historical data and dashboard contents were not audited.
+
+[Illustrated learning review in Portuguese: what we did, why and how it supports IT skills](docs/homelab-learning-review-2026-10-13-14.md)
+
 ## Lab Hardware
 
 ### PVE-01 - Lenovo ThinkCentre V520s
