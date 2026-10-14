@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="650" viewBox="0 0 1000 650" role="img" aria-labelledby="title desc">
+<title id="title">Homelab Piotto: automatizar, observar e recuperar</title><desc id="desc">Ansible administra Ubuntu, DNS e monitoramento. O monitoramento fica no pve3080, faz backup no Lenovo e foi restaurado como container 203 sem rede.</desc>
+<rect width="1000" height="650" fill="#f3f6fb"/>
+<g font-family="Arial,sans-serif" fill="#16324a">
+<text x="40" y="50" font-size="28" font-weight="bold">Uma pequena cidade de TI que sabe se recuperar</text>
+<text x="40" y="80" font-size="17">13 e 14 de outubro de 2026 · Homelab Piotto</text>
+<rect x="40" y="115" width="275" height="130" rx="15" fill="#dceafb"/><text x="60" y="148" font-size="21" font-weight="bold">Ansible: equipe de manutenção</text><text x="60" y="180" font-size="17">ansible01 · CT 202</text><text x="60" y="207" font-size="17">Executa roteiros e verifica resultados</text>
+<rect x="365" y="115" width="275" height="130" rx="15" fill="#e1f0e8"/><text x="385" y="148" font-size="21" font-weight="bold">DNS: agenda de endereços</text><text x="385" y="180" font-size="17">dns01 · CT 201</text><text x="385" y="207" font-size="17">Relaciona nomes e endereços IP</text>
+<rect x="690" y="115" width="270" height="130" rx="15" fill="#e9e1f5"/><text x="710" y="148" font-size="21" font-weight="bold">Ubuntu: oficina de prática</text><text x="710" y="180" font-size="17">VMs 100 e 101</text><text x="710" y="207" font-size="17">Atualizadas uma de cada vez</text>
+<text x="40" y="285" font-size="20" font-weight="bold">Recuperação validada do monitoramento</text>
+<rect x="40" y="320" width="275" height="160" rx="15" fill="#dceafb"/><text x="60" y="355" font-size="22" font-weight="bold">Sala de controle</text><text x="60" y="387" font-size="18">monitor01 · CT 200</text><text x="60" y="419" font-size="17">Prometheus · Grafana · Kuma</text><text x="60" y="449" font-size="17">Original no pve3080</text>
+<rect x="365" y="320" width="275" height="160" rx="15" fill="#e1f0e8"/><text x="385" y="355" font-size="22" font-weight="bold">Cofre de cópias</text><text x="385" y="387" font-size="18">Lenovo · NFS</text><text x="385" y="419" font-size="17">Backup de aproximadamente 3 GB</text><text x="385" y="449" font-size="17">Diário às 04h · últimas 7 cópias</text>
+<rect x="690" y="320" width="270" height="160" rx="15" fill="#fff0d3"/><text x="710" y="355" font-size="22" font-weight="bold">Ensaio de recuperação</text><text x="710" y="387" font-size="18">CT 203 · sem rede externa</text><text x="710" y="419" font-size="17">Aplicações responderam</text><text x="710" y="449" font-size="17">Desligado após o teste</text>
+<path d="M318 399H354M647 399H679" stroke="#346c9a" stroke-width="3"/><path d="m346 392 9 7-9 7m325-14 9 7-9 7" fill="none" stroke="#346c9a" stroke-width="3"/>
+<text x="40" y="535" font-size="21" font-weight="bold">Três perguntas diferentes</text>
+<text x="40" y="574" font-size="18">Ping: chego até ele?     HTTP: o serviço responde?     Restore: consigo recuperá-lo?</text>
+<text x="40" y="615" font-size="17">Já validado: execução, saúde das aplicações e restauração básica. Histórico detalhado ainda não auditado.</text>
+</g></svg>
