@@ -136,7 +136,7 @@ A trusted remote computer can install Tailscale, authenticate to the authorized 
 
 ### Further security work
 
-- Enable and validate **device approval** for new tailnet devices; do not confuse user-invitation approval with device approval.
+- **Device approval enabled on 26 October 2026**; existing devices remained online and Proxmox TCP connectivity was retested. A new-device denial and approval workflow has not yet been exercised.
 - Narrow grants to the required management ports and, where practical, designated administration devices; test allow and deny cases before and after rollout.
 - Review the existing Tailscale SSH `check` rule separately; an authorization rule does not prove Tailscale SSH is enabled on a node.
 - Test Grafana, Prometheus, Uptime Kuma, the other Proxmox hosts and SSH from a remote network individually.
@@ -145,3 +145,13 @@ A trusted remote computer can install Tailscale, authenticate to the authorized 
 ### Skills demonstrated
 
 Change control and rollback preparation; HuJSON policy editing; identity-scoped authorization; VPN subnet routing; network interface and TCP diagnostics; independent-network validation; separating connectivity tests from security enforcement tests.
+
+## Follow-up: new-device approval — 26 October 2026
+
+In the Tailscale admin console under **Device management**, the **Manually approve new devices** switch was enabled. The administrator confirmed the switch changed to blue/on.
+
+**Post-change checks:** Both existing machines (`vpn01` and `piottodesktop`) remained green/online in the Machines view. From Windows PowerShell, `Test-NetConnection 192.168.1.164 -Port 8006` returned `TcpTestSucceeded : True` after enabling approval, demonstrating continued TCP access to the Proxmox management port.
+
+**Test boundaries:** This final check was not separately confirmed to have been performed via the iPhone hotspot. The earlier independent mobile-network test covered subnet routing after the access-grant change. We have not yet enrolled an additional new device to prove the pending-approval workflow; that remains a future test. Tailnet Lock was not enabled. Key expiry remained 180 days and automatic updates for new devices remained enabled.
+
+**Security outcome:** New devices now require administrative approval before accessing the tailnet, providing an additional admission-control layer alongside the account-scoped grants. Continue using MFA on the identity provider, least-privilege grants and Proxmox authentication.
