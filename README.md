@@ -2,6 +2,15 @@
 
 This repository documents my practical learning journey with Linux, networking, virtualization, containers, monitoring, troubleshooting and server administration.
 
+## Remote VPN security validation — 26 October 2026
+
+- Replaced the unrestricted Tailscale `Allow all` grant with owner-account grants for own tailnet devices and the `192.168.1.0/24` subnet.
+- Verified the new policy preview and preserved a local rollback copy before applying it.
+- Confirmed remote Proxmox access from Windows over an iPhone mobile hotspot using `Test-NetConnection` and the web interface.
+- Future work: approve new devices explicitly, narrow management ports, and test denied access.
+
+[Detailed Tailscale VPN deployment and policy hardening notes](docs/tailscale-vpn-remote-access-2026-10-17.md)
+
 ## Latest validated work — 13–14 October 2026
 
 - Extended Ansible management to `dns01` and `monitor01` in separate inventory groups.
