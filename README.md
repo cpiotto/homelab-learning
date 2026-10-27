@@ -2,6 +2,17 @@
 
 This repository documents my practical learning journey with Linux, networking, virtualization, containers, monitoring, troubleshooting and server administration.
 
+## Windows workstation monitoring — 27 October 2026
+
+- Integrated the MSI `PiottoDesktop` (Windows) into the existing Prometheus and Grafana stack using Windows Exporter v0.32.0.
+- Diagnosed a Tailscale subnet-route preference and restored direct local Wi-Fi routing to `monitor01`.
+- Validated TCP connectivity, exporter HTTP 200, the scoped inbound firewall rule and Prometheus target health (**7/7 UP**).
+- Repaired YAML indentation and a stale Docker single-file bind mount without replacing the monitoring data volume.
+- Imported and adapted Grafana Windows Exporter dashboard 24390; corrected CPU utilisation queries and excluded recovery partitions from main storage panels.
+- Documented validation evidence, security caveats, known limitations and next steps.
+
+[Windows workstation monitoring case study](docs/windows-workstation-monitoring-2026-10-27.md)
+
 ## Remote VPN security validation — 26 October 2026
 
 - Replaced the unrestricted Tailscale `Allow all` grant with owner-account grants for own tailnet devices and the `192.168.1.0/24` subnet.
