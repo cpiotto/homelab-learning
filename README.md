@@ -2,6 +2,15 @@
 
 This repository documents my practical learning journey with Linux, networking, virtualization, containers, monitoring, troubleshooting and server administration.
 
+## Rack migration DNS incident recovery — 28 October 2026
+
+- Restored name resolution after relocating Proxmox nodes into a rack: isolated a non-started AdGuard Home container (CT 204) and a separate Ethernet cable speed fault.
+- Replaced the MSI patch cable and verified the negotiated link increased from **100 Mbps to 1 Gbps**.
+- Recovered AdGuard Home on `pve3080b`, enabled `onboot: 1`, and validated IPv4/IPv6 DNS, filtered responses and the query log.
+- Configured the MSI Ethernet DNS to use AdGuard Home; documented ISP IPv6 renumbering and unverified upstream/boot behaviour as follow-ups.
+
+[Read the rack migration and DNS incident recovery case study](docs/rack-migration-dns-incident-2026-10-28.md)
+
 ## Windows workstation monitoring — 27 October 2026
 
 - Integrated the MSI `PiottoDesktop` (Windows) into the existing Prometheus and Grafana stack using Windows Exporter v0.32.0.
@@ -399,7 +408,7 @@ Portainer was used in the earlier `docker01` environment. It has not yet been re
 
 ## Internal DNS
 
-Internal DNS is provided by BIND9 in LXC 201 `dns01` on `pve3080`.
+For the validated MSI Ethernet client, AdGuard Home runs in LXC 204 `adguard01` on `pve3080b` at `192.168.1.129` and performs DNS filtering. BIND9 in LXC 201 `dns01` on `pve3080` at `192.168.1.195` provides the internal `home.arpa` zone. The specific AdGuard-to-BIND9 forwarding path remains a follow-up validation; see the [28 October DNS recovery case study](docs/rack-migration-dns-incident-2026-10-28.md).
 
 - DNS server: `192.168.1.195`
 - internal zone: `home.arpa`
