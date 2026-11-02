@@ -6,6 +6,9 @@ Combine DNS filtering with predictable internal name resolution for the homelab.
 
 This document consolidates existing work; it is not a new deployment or a record of newly executed tests. Prepared on 27 October 2026, it builds on the [BIND9 implementation and validation notes](dns-infrastructure-2026-10-07.md) and the [13–14 October learning review](homelab-learning-review-2026-10-13-14.md). Those documents retain the detailed container specification, zone records, configuration checks and monitoring setup.
 
+> **Validation update — 2 November 2026:** This project's selected-client DNS integration has now been functionally validated from the Windows MSI workstation. The new evidence, test outputs and remaining boundaries are recorded below. Statements labelled historical or unvalidated in the original 27 October assessment must be read in their original time context.
+
+
 ## Evidence status
 
 Three evidence categories are used throughout:
@@ -108,7 +111,119 @@ The practical limitation is that configuring an IPv4 DNS path alone is insuffici
 
 Consequently, this project does not claim enforced filtering across the entire home network. The earlier statement that BIND was being tested on selected clients is retained as historical context; the current DNS distribution configuration for all clients remains unconfirmed.
 
-## Results
+## Validation update — 2 November 2026
+
+### Scope, systems and evidence
+
+This is a **selected-client functional validation**, performed with the project owner on 2 November 2026 using PowerShell and the AdGuard Home web interface. Command results and configuration screenshots were provided during the troubleshooting session. No packet capture, BIND query-log correlation, router reconfiguration or whole-house client audit was performed.
+
+| Component | Observed/recorded detail |
+| --- | --- |
+| Client | MSI Windows workstation; tested network interface: `Ethernet 3` |
+| AdGuard | `adguard01`, LXC 204 on `pve3080b`; IPv4 `192.168.1.129` |
+| AdGuard IPv6 DNS used by Windows | `2a00:23c7:2e06:2d01:be24:11ff:fea1:f4b7` (ISP prefix may change) |
+| BIND9 | `dns01`, LXC 201 on `pve3080`; IPv4 `192.168.1.195` |
+| Internal test record | `pve.home.arpa` -> `192.168.1.164` |
+| Router | EE gateway `192.168.1.254` |
+
+The owner confirmed that `pct status 204` indicated the container was running and that `pct exec 204 -- systemctl is-active AdGuardHome` indicated the service was active. The literal terminal output for these two service checks was not retained in this session.
+
+### Configuration reviewed in the AdGuard interface
+
+The primary upstream configuration was displayed as:
+
+```text
+https://dns10.quad9.net/dns-query
+[/home.arpa/]192.168.1.195
+```
+
+The first entry configures Quad9 DNS-over-HTTPS for ordinary external lookups; the conditional rule selects BIND9 for `home.arpa`. The setting confirms **routing intent**, not a per-query trace of BIND9's participation.
+
+Other settings observed: upstream strategy **Load balancing**; fallback DNS list empty; bootstrap DNS IPs `9.9.9.10`, `149.112.112.10`, `2620:fe::10`, and `2620:fe::fe:10`; upstream timeout **10 seconds**. Private reverse resolvers were enabled, with the displayed default `192.168.1.254:53` (EE router); client IP reverse-resolution was enabled. This reverse path is distinct from the `home.arpa` conditional forwarding rule.
+
+### Windows client DNS selection
+
+The PowerShell query below was used:
+
+```powershell
+Get-DnsClientServerAddress -InterfaceAlias "Ethernet 3" |
+  Format-Table AddressFamily,ServerAddresses -AutoSize
+```
+
+Observed output:
+
+```text
+AddressFamily ServerAddresses
+------------- ---------------
+            2 {192.168.1.129}
+           23 {2a00:23c7:2e06:2d01:be24:11ff:fea1:f4b7}
+```
+
+The selected interface showed one configured IPv4 DNS server and one IPv6 DNS server, both assigned to AdGuard. This does not inspect every Windows interface, every possible application-level resolver or every household client.
+
+### Functional tests
+
+| Test (2 November 2026) | Observed result | Assessment |
+| --- | --- | --- |
+| `nslookup pve.home.arpa 192.168.1.129` | Initial `DNS request timed out` / `Server: UnKnown`; nevertheless returned `pve.home.arpa -> 192.168.1.164` | Internal A-record resolution **passed** via explicit AdGuard IPv4. The initial timeout was not diagnosed; reverse server-name lookup is a plausible explanation, not a proven cause. |
+| `nslookup logs.ads.vungle.com 192.168.1.129` | Resolver `adguard01.lan`; answers `::` and `0.0.0.0` | **Passed**: explicit AdGuard query was filtered for both address record families. |
+| `nslookup logs.ads.vungle.com` | Automatically selected the AdGuard IPv6 resolver; answers `::` and `0.0.0.0` | **Passed**: the Windows client's default DNS selection used AdGuard for this query. |
+| `nslookup pve.home.arpa` | Automatically selected the AdGuard IPv6 resolver; returned `192.168.1.164` | **Passed**: selected-client internal lookup works without specifying a DNS server. The returned A record is IPv4 data delivered by a query to an IPv6 resolver. |
+
+Example of the automatic internal lookup:
+
+```text
+PS> nslookup pve.home.arpa
+Server:  UnKnown
+Address:  2a00:23c7:2e06:2d01:be24:11ff:fea1:f4b7
+
+Non-authoritative answer:
+Name:    pve.home.arpa
+Address:  192.168.1.164
+```
+
+Here `Server: UnKnown` identifies an unresolved display name for the DNS server; it is **not** evidence that the requested internal A-record lookup failed.
+
+### Query-log observations
+
+In the AdGuard Home Query Log, `pve.home.arpa` queries of types **A** and **AAAA** were present on 2 November at 13:27:24, with the response state shown as **Processed** and an IPv6 client address. The log also displayed `pve.home.arpa.lan` search-suffix variants; their origin and significance were not investigated.
+
+A separate real-world filtered query for `event.bblmw.com` showed **Blocked**, matching **AdGuard DNS filter**, with an AAAA response of `::`, `NOERROR`, TTL 10 and approximately 0.04 ms processing time. This corroborates actual filtering activity beyond the deliberate PowerShell test.
+
+**Evidence boundary:** The displayed `pve.home.arpa` Query Log entries did not expose the upstream server that supplied the answer. A correct response could also be served from cache. Therefore the conditional forwarder is **configured and consistent with successful selected-client resolution**, but an individually traced AdGuard -> BIND9 query was **not captured**. Neither the short Query Log processing times nor the `Non-authoritative answer` label establish the upstream path.
+
+### Scope-based completion decision
+
+**Status: selected-client DNS integration validated and this learning stage closed as of 2 November 2026.**
+
+Acceptance criteria met:
+
+- AdGuard service/container operational per owner confirmation.
+- Client DNS settings point to AdGuard for IPv4 and IPv6 on the tested Ethernet interface.
+- Both explicit and automatic lookups demonstrate working internal resolution.
+- Both deliberate and observed browsing-related queries demonstrate filtering.
+- AdGuard UI shows the `home.arpa` -> BIND9 conditional forwarding rule.
+- Outstanding limitations are recorded rather than treated as deployment failures.
+
+**Not claimed:** enforced network-wide ad blocking, complete capture of every DNS path, a packet-level BIND forwarding trace, or validated private reverse-DNS behaviour via the EE router.
+
+**Known limitations and deferred work:**
+
+1. The EE router's IPv6 DNS advertisements may cause other clients to choose a non-AdGuard resolver; household-wide DNS enforcement remains unverified.
+2. The ISP-assigned AdGuard IPv6 address may change when the WAN IPv6 prefix changes. Recheck client resolver selection after renumbering.
+3. The reverse DNS default points to the EE router, not explicitly to BIND9. Only revisit if local host-name display or PTR lookups cause a concrete problem.
+4. Optional stronger upstream evidence: run a unique uncached internal DNS test while observing AdGuard/BIND logs. Not necessary for closure of the current functional milestone.
+5. The first explicit `pve.home.arpa` query had an initial timeout; repeat only if a user-visible failure or recurrent latency appears.
+
+No new service, router purchase, forced IPv6 changes or additional homelab project is required for this milestone.
+
+### Skills demonstrated
+
+Selected-client IPv4/IPv6 resolver verification, Windows `nslookup` and PowerShell diagnostics, DNS filtering tests, understanding conditional forwarding versus reverse DNS, reading application logs, distinguishing observed outcomes from inferred architecture, and recording operational limitations. These map to entry-level IT Support and junior infrastructure troubleshooting work.
+
+---
+
+## Results (original 27 October assessment)
 
 - The existing repository documents working historical internal DNS resolution through BIND, including `pve.home.arpa` and reverse lookups.
 - The owner-reported AdGuard configuration separates external resolution through the supplied Quad9 endpoint from conditional resolution of `home.arpa` through BIND.
