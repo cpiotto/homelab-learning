@@ -1,5 +1,16 @@
 # Homelab Learning
 
+## DNS integration validation completed on MSI — 2 November 2026
+
+- Confirmed that the Windows MSI Ethernet interface uses AdGuard Home for both IPv4 and IPv6 DNS.
+- Verified filtered answers (`0.0.0.0` and `::`) using explicit and automatic DNS queries, plus real blocked queries in AdGuard's Query Log.
+- Verified `pve.home.arpa -> 192.168.1.164` through AdGuard, including when Windows automatically selected the IPv6 resolver.
+- Confirmed the configured conditional upstream `[/home.arpa/]192.168.1.195` for BIND9 and the Quad9 DNS-over-HTTPS external upstream.
+- **Scope:** MSI client validation completed; an individual upstream query was not traced to BIND9 and network-wide filtering is **not** claimed. Router EE IPv6 DNS distribution and private reverse-DNS behaviour remain documented limitations.
+
+[AdGuard Home + BIND9 integration: validation evidence, results and closure](docs/adguard-bind9-integration.md)
+
+
 This repository documents my practical learning journey with Linux, networking, virtualization, containers, monitoring, troubleshooting and server administration.
 
 ## Rack migration DNS incident recovery — 28 October 2026
