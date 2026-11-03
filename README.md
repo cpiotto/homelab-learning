@@ -1,5 +1,15 @@
 # Homelab Learning
 
+## Local AI inference and Python Ollama API integration — 3 November 2026
+
+- Ran Qwen 3.5 9B and Gemma 4 12B locally on an MSI Windows workstation with an NVIDIA RTX 4070 Ti, verifying GPU model placement and collecting system-wide VRAM and response timings.
+- Compared practical Linux troubleshooting and short-answer tasks, identifying loading/caching effects and the limitations of model-generated technical advice.
+- Tested Ollama's localhost HTTP API from PowerShell, then built two standard-library Python examples: single-prompt inference and multi-turn chat with session-only context.
+- Validated the multi-turn client by recalling `dns01` from a previous user message. No cloud API, new Proxmox service or additional hardware was required.
+- **Scope:** local inference and Python API prototype completed; persistent memory, speech and ESP32 integration remain future work.
+
+[Local AI inference and Ollama API integration: tests, code and lessons learned](docs/local-ai-ollama-python-2026-11-03.md)
+
 ## DNS integration validation completed on MSI — 2 November 2026
 
 - Confirmed that the Windows MSI Ethernet interface uses AdGuard Home for both IPv4 and IPv6 DNS.
