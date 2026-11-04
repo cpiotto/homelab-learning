@@ -1,5 +1,15 @@
 # Homelab Learning
 
+## Offline Brazilian Portuguese voice assistant — 4 November 2026
+
+- Built an entirely local microphone-to-voice workflow on the existing MSI workstation using Open WebUI, Ollama `gemma4:12b`, Whisper `base` and Piper TTS (`pt_BR-faber-medium`).
+- Integrated Docker Desktop / WSL 2 containers over the internal `ai-voice` network, reusing Ollama on Windows and keeping the web interface restricted to localhost.
+- Troubleshot English-accented browser speech, Windows language capability detection and an initial Speech-to-Text / Text-to-Speech configuration mix-up.
+- **Validation:** confirmed accurate spoken Portuguese input, Brazilian Portuguese voice output, and a complete voice conversation with the workstation disconnected from the Internet.
+- **Scope:** Version 1 completed; mobile/ESP32 access, cold-start testing and remote access remain optional future work.
+
+[Offline voice assistant: architecture, reproducible configuration, tests, troubleshooting and closure](docs/local-ai-voice-assistant-2026-11-04.md)
+
 ## Local AI inference and Python Ollama API integration — 3 November 2026
 
 - Ran Qwen 3.5 9B and Gemma 4 12B locally on an MSI Windows workstation with an NVIDIA RTX 4070 Ti, verifying GPU model placement and collecting system-wide VRAM and response timings.
