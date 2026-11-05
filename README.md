@@ -1,5 +1,14 @@
 # Homelab Learning
 
+## Local AI Technical Assistant model evaluation — 5 November 2026
+
+- Configured a Brazilian-Portuguese troubleshooting assistant in Open WebUI using existing Ollama infrastructure and a strict one-read-only-command-at-a-time system prompt.
+- Compared Qwen 3.5 9B, Gemma 4 12B and DeepSeek R1 8B on the same Windows/BIND9 DNS scenario; DeepSeek also passed initial Docker and Debian networking scenarios.
+- Selected `deepseek-r1:8b` as the **provisional** model, with three successful first-step tests. Full multi-turn diagnostic reliability and controlled performance benchmarks remain unverified.
+- Documented reproducible setup, complete prompt, observed results, technical caveats, safety considerations and closure criteria.
+
+[Read the local AI troubleshooting assistant evaluation](docs/local-ai-technical-assistant-model-evaluation-2026-11-05.md)
+
 ## Offline Brazilian Portuguese voice assistant — 4 November 2026
 
 - Built an entirely local microphone-to-voice workflow on the existing MSI workstation using Open WebUI, Ollama `gemma4:12b`, Whisper `base` and Piper TTS (`pt_BR-faber-medium`).
