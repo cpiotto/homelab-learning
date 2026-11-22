@@ -1,5 +1,15 @@
 # Homelab Learning
 
+## ESP32 Xiaozhi voice-to-BIND9 MCP integration — 22 November 2026
+
+- Connected an existing ESP32-S3 Xiaozhi voice assistant to the homelab through an authenticated WebSocket/MCP bridge, **without changing the firmware or voice settings**.
+- Reused Debian 13 LXC 202 `ansible01` on `pve3080b`, with isolated Python 3.13 dependencies and a read-only `check_dns` tool querying BIND9 at `192.168.1.195`.
+- Verified direct DNS resolution, MCP tool discovery, an actual voice-triggered `CallToolRequest`, and a spoken reply from the device.
+- Installed the bridge as a restricted `systemd` service; confirmed it reconnected and answered again after a service restart; automatic service startup is enabled.
+- **Scope:** Version 1 functionally complete. Full LXC reboot recovery and long-term connection stability have not yet been tested; no MCP tokens or passwords are included.
+
+[Read the Xiaozhi ESP32 MCP integration case study](docs/xiaozhi-esp32-mcp-dns-2026-11-22.md) · [Python MCP tool](examples/xiaozhi-mcp/check_dns.py) · [systemd unit](examples/xiaozhi-mcp/xiaozhi-mcp.service)
+
 ## Local AI Technical Assistant model evaluation — 5 November 2026
 
 - Configured a Brazilian-Portuguese troubleshooting assistant in Open WebUI using existing Ollama infrastructure and a strict one-read-only-command-at-a-time system prompt.
