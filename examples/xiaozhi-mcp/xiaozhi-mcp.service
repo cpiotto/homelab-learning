@@ -1,0 +1,28 @@
+# Example systemd unit for the existing Debian 13 LXC container.
+# Install at /etc/systemd/system/xiaozhi-mcp.service and keep the
+# separate /etc/xiaozhi-mcp/bridge.env credential file private.
+# DO NOT put any real endpoint URL or token in this repository.
+
+[Unit]
+Description=Xiaozhi MCP Bridge - Homelab DNS
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/xiaozhi-mcp
+EnvironmentFile=/etc/xiaozhi-mcp/bridge.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/xiaozhi-mcp/.venv/bin/python /opt/xiaozhi-mcp/mcp_pipe.py check_dns.py
+Restart=on-failure
+RestartSec=5
+
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
