@@ -194,6 +194,7 @@ A separate existing `Homelab Technical Assistant` profile remained present; the 
 | Automatic restart after PC reboot | No reboot validation recorded | Not tested |
 | Two simultaneous users / 24/7 load | No timing or concurrency benchmark | Not tested |
 | Offline MacBook operation without Internet | Not retested for this LAN workflow | Not tested |
+| ESP32 Xiaozhi DNS voice check after Open WebUI replacement | User reported that ESP32 still answered a question about the DNS server; this uses a separate Xiaozhi/MCP path, not Open WebUI/Piper | Reported pass; no fresh MCP log captured |
 
 ## Safe read-only follow-up checks
 
