@@ -241,6 +241,12 @@ Observed: `active` and `enabled`. Logs showed successful WebSocket connection, P
 - **External tool boundary:** The currently deployed tool has a fixed DNS query and returns data only. Additional tools should use least privilege and avoid unrestricted shell execution.
 - **Data exposure:** Public documentation uses private IP addresses already documented in this homelab; do not post device identifiers, real secrets, screenshots exposing the WSS token or private configuration files.
 
+## Post-change smoke check — 23 November 2026
+
+Following the separate Windows Open WebUI LAN-access change, the operator reported that the ESP32 Xiaozhi assistant **continued responding to a voice question about the DNS server**. This provides useful continuity evidence for the ESP32 voice interface. The session did not capture a fresh MCP `CallToolRequest`, DNS query, or service journal entry, so the observation alone must not be treated as a newly verified end-to-end DNS tool invocation. The original 22 November end-to-end evidence remains valid for the earlier validation.
+
+The ESP32 Xiaozhi/MCP DNS path is architecturally independent of the Windows-hosted Open WebUI/Piper text-to-speech path. Successful ESP32 speech does **not** validate that Piper TTS is still reachable from the recreated `open-webui` container.
+
 ## Closure
 
 **Version 1 closure decision: complete for the intended read-only voice DNS check.** Verified: an ESP32 voice command triggered `check_dns` via Xiaozhi/MCP; the Debian container queried BIND9; the tool returned a response; the bridge worked again after a `systemd` service restart; automatic startup at the Linux service level was enabled.
