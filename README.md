@@ -1,5 +1,15 @@
 # Homelab Learning
 
+## Shared local AI on the home LAN — 23 November 2026
+
+- Extended an existing Windows Ollama + Docker Open WebUI installation from localhost-only access to a **MacBook client on the trusted home LAN** by changing the published web port to `0.0.0.0:3000->8080/tcp`.
+- Preserved the `open-webui` named data volume, host-to-Ollama mapping and existing models; created a separate user account with self-registration disabled again after setup.
+- Built a `Business & Personal Assistant` custom profile using the existing Qwen3.5 9B base model, with Business Management / British English study guidance and a read-only user permission.
+- Diagnosed and resolved short prompts failing because the effective context was set to approximately 2K tokens. The MacBook user confirmed the assistant responded successfully after the context adjustment.
+- **Scope:** Core remote-browser chat validated. Firewall scope, restricted-profile visibility, Piper TTS's `ai-voice` Docker network after container recreation, and reboot recovery remain explicitly unverified.
+
+[Read the shared local AI access and custom assistant case study](docs/local-ai-family-lan-access-2026-11-23.md)
+
 ## ESP32 Xiaozhi voice-to-BIND9 MCP integration — 22 November 2026
 
 - Connected an existing ESP32-S3 Xiaozhi voice assistant to the homelab through an authenticated WebSocket/MCP bridge, **without changing the firmware or voice settings**.
