@@ -1,5 +1,14 @@
 # Homelab Learning
 
+## ESP32 Xiaozhi voice-driven Prometheus monitoring — 26 November 2026
+
+- Extended the existing FastMCP bridge on `ansible01` with a read-only `check_servers` tool using Python's standard library and the Prometheus HTTP API.
+- Validated all seven returned scrape targets (7/7 UP), restarted the existing systemd service and confirmed spoken availability, target inventory and DNS regression checks.
+- No new hardware, firmware changes or additional services were required.
+- **Scope:** Core integration complete; failed-scrape simulation, missing targets and reboot recovery remain unverified.
+
+[Read the implementation, validation evidence and rollback procedure](docs/xiaozhi-esp32-mcp-prometheus-2026-11-26.md)
+
 ## Shared local AI on the home LAN — 23 November 2026
 
 - Extended an existing Windows Ollama + Docker Open WebUI installation from localhost-only access to a **MacBook client on the trusted home LAN** by changing the published web port to `0.0.0.0:3000->8080/tcp`.
